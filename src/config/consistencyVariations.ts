@@ -37,6 +37,15 @@ export interface VariationOption {
     | "roller-ball-plastic"
     | "vintage-bulb-sprayer"
     | "vintage-bulb-sprayer-tassel"
+    | "vintage-bulb-tassel-silver-black"
+    | "vintage-bulb-tassel-gold-gold"
+    | "vintage-bulb-tassel-gold-ivory"
+    | "vintage-bulb-tassel-silver-lavender"
+    | "vintage-bulb-tassel-gold-pink"
+    | "vintage-bulb-tassel-silver-ivory"
+    | "vintage-bulb-tassel-silver-red"
+    | "vintage-bulb-tassel-silver-white"
+    | "vintage-bulb-tassel-matte-silver-silver"
     | "reducer"
     | "dropper"
     | "glass-stopper"
@@ -318,6 +327,72 @@ export const FITMENT_TYPES: VariationOption[] = [
     prompt: "vintage-style squeeze-bulb atomizer fitment with a decorative silk tassel attached at the metal collar — polished metal collar at the bottle neck, braided hose to the squeeze bulb, and a fine silk tassel adding a luxury apothecary accent",
     swatch: "#94805E",
   },
+  // ─── Vintage bulb + tassel — catalog colorways (Empire / antique sprayer SKUs)
+  // Each option locks collar metal + bulb + tassel to one SKU. Use one bottle
+  // material chip + multi-select these fitments for an aligned cream-grid run.
+  {
+    id: "vintage-bulb-tassel-silver-black",
+    label: "Antique Bulb + Tassel · Silver · Black",
+    prompt:
+      "FITMENT is a vintage squeeze-bulb atomizer with tassel: HIGH-SHINE POLISHED SILVER-CHROME metal collar and ferrule at the bottle neck, matching bright silver braided hose to the squeeze bulb. The rubber/silk squeeze bulb is DEEP GLOSS BLACK. A decorative silk tassel at the collar is RICH BLACK, matching the bulb tone. Clear dip tube into the bottle. Apothecary luxury; collar reads as bright nickel/chrome, not matte.",
+    swatch: "#1A1A1A",
+  },
+  {
+    id: "vintage-bulb-tassel-gold-gold",
+    label: "Antique Bulb + Tassel · Gold · Gold bulb",
+    prompt:
+      "FITMENT is a vintage squeeze-bulb atomizer with tassel: WARM POLISHED GOLD / BRASS metal collar and ferrule at the bottle neck, matching gold-toned braided hose. The squeeze bulb is CHAMPAGNE GOLD / WARM TAN rubber or silk, harmonizing with the collar. Silk tassel at the collar is matching WARM GOLD-CHAMPAGNE. Clear dip tube. Consistent antique gold hardware throughout.",
+    swatch: "#C4A574",
+  },
+  {
+    id: "vintage-bulb-tassel-gold-ivory",
+    label: "Antique Bulb + Tassel · Gold · Ivory",
+    prompt:
+      "FITMENT is a vintage squeeze-bulb atomizer with tassel: WARM POLISHED GOLD / BRASS metal collar and ferrule, gold-toned braided hose. The squeeze bulb is SOFT IVORY / CREAM off-white. Silk tassel at the collar is matching IVORY-CREAM (not stark white). Clear dip tube. Gold hardware contrasts gently with the ivory bulb and tassel.",
+    swatch: "#EDE6D6",
+  },
+  {
+    id: "vintage-bulb-tassel-silver-lavender",
+    label: "Antique Bulb + Tassel · Silver · Lavender",
+    prompt:
+      "FITMENT is a vintage squeeze-bulb atomizer with tassel: HIGH-SHINE POLISHED SILVER-CHROME collar and ferrule, bright silver braided hose. The squeeze bulb is DUSTY LAVENDER / SOFT PURPLE-MAUVE. Silk tassel matches the bulb — clear lavender-purple fringe. Clear dip tube. Silver metal stays cool and reflective; all colour is in bulb + tassel only.",
+    swatch: "#9B8CB8",
+  },
+  {
+    id: "vintage-bulb-tassel-gold-pink",
+    label: "Antique Bulb + Tassel · Gold · Pink",
+    prompt:
+      "FITMENT is a vintage squeeze-bulb atomizer with tassel: WARM POLISHED GOLD / BRASS collar and ferrule, gold-toned braided hose. The squeeze bulb is SOFT DUSTY PINK / ROSE blush rubber or silk. Silk tassel matches — delicate pink fringe at the collar. Clear dip tube. Romantic antique apothecary look.",
+    swatch: "#D9A5B4",
+  },
+  {
+    id: "vintage-bulb-tassel-silver-ivory",
+    label: "Antique Bulb + Tassel · Silver · Ivory",
+    prompt:
+      "FITMENT is a vintage squeeze-bulb atomizer with tassel: HIGH-SHINE POLISHED SILVER-CHROME collar and ferrule, bright silver braided hose. The squeeze bulb is SOFT IVORY / CREAM off-white. Silk tassel matches IVORY-CREAM. Clear dip tube. Cool silver metal with warm ivory accents on bulb and tassel.",
+    swatch: "#E8E2D4",
+  },
+  {
+    id: "vintage-bulb-tassel-silver-red",
+    label: "Antique Bulb + Tassel · Silver · Red",
+    prompt:
+      "FITMENT is a vintage squeeze-bulb atomizer with tassel: HIGH-SHINE POLISHED SILVER-CHROME collar and ferrule, bright silver braided hose. The squeeze bulb is DEEP RICH RED / BURGUNDY rubber or silk. Silk tassel matches — saturated red fringe. Clear dip tube. Strong colour contrast against silver hardware.",
+    swatch: "#8B1C1C",
+  },
+  {
+    id: "vintage-bulb-tassel-silver-white",
+    label: "Antique Bulb + Tassel · Silver · White",
+    prompt:
+      "FITMENT is a vintage squeeze-bulb atomizer with tassel: HIGH-SHINE POLISHED SILVER-CHROME collar and ferrule, bright silver braided hose. The squeeze bulb is CLEAN BRIGHT WHITE rubber or silk. Silk tassel matches — crisp white fringe (slightly warmer than paper white is OK). Clear dip tube. Classic silver + white apothecary pairing.",
+    swatch: "#F2F2F0",
+  },
+  {
+    id: "vintage-bulb-tassel-matte-silver-silver",
+    label: "Antique Bulb + Tassel · Matte silver · Grey bulb",
+    prompt:
+      "FITMENT is a vintage squeeze-bulb atomizer with tassel: MATTE / SATIN SILVER metal collar and ferrule (soft diffused highlights, NOT mirror chrome), matching matte silver-grey braided hose. The squeeze bulb is COOL SILVER-GREY / PEWTER rubber or silk, harmonizing with the matte metal. Silk tassel matches — muted silver-grey fringe. Clear dip tube. Entirely subdued metallic family, no bright chrome.",
+    swatch: "#9EA2A6",
+  },
   {
     id: "reducer",
     label: "Reducer",
@@ -436,6 +511,15 @@ const FITMENT_CATEGORY_MAP: Record<string, FitmentCategory> = {
   "perfume-spray-pump": "sprayers",
   "vintage-bulb-sprayer": "sprayers",
   "vintage-bulb-sprayer-tassel": "sprayers",
+  "vintage-bulb-tassel-silver-black": "sprayers",
+  "vintage-bulb-tassel-gold-gold": "sprayers",
+  "vintage-bulb-tassel-gold-ivory": "sprayers",
+  "vintage-bulb-tassel-silver-lavender": "sprayers",
+  "vintage-bulb-tassel-gold-pink": "sprayers",
+  "vintage-bulb-tassel-silver-ivory": "sprayers",
+  "vintage-bulb-tassel-silver-red": "sprayers",
+  "vintage-bulb-tassel-silver-white": "sprayers",
+  "vintage-bulb-tassel-matte-silver-silver": "sprayers",
   "lotion-pump": "pumps",
   "roller-ball": "rollers",
   "roller-ball-plastic": "rollers",
