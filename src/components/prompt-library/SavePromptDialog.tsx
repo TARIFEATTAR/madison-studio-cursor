@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { X, Bookmark, Sparkles, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { useCurrentOrganizationId } from "@/hooks/useIndustryConfig";
 import { useToast } from "@/hooks/use-toast";
 import { contentTypeMapping, getContentTypeDisplayName } from "@/utils/contentTypeMapping";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -21,6 +22,7 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -45,8 +47,10 @@ export function SavePromptDialog({
   deliverableFormat,
 }: SavePromptDialogProps) {
   const { currentOrganizationId } = useOnboarding();
+  const { orgId: resolvedOrganizationId } = useCurrentOrganizationId();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const organizationId = currentOrganizationId || resolvedOrganizationId || null;
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -97,7 +101,7 @@ useEffect(() => {
 useEffect(() => {
   if (open && deliverableFormat === 'image_prompt') {
     if (!selectedCategory) setSelectedCategory('visual');
-    if (!selectedContentType) setSelectedContentType('image');
+    if (!selectedContentType) setSelectedContentType('visual');
   }
 }, [open, deliverableFormat]);
 
@@ -177,22 +181,38 @@ useEffect(() => {
       return;
     }
 
+    if (!organizationId) {
+      toast({
+        title: "Error",
+        description: "No organization found. Please refresh and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
 setIsSaving(true);
 
 try {
+  const normalizedContentType = (
+    ["product", "email", "social", "visual", "blog"].includes(selectedCategory)
+      ? selectedCategory
+      : selectedContentType
+  ) as "product" | "email" | "social" | "visual" | "blog";
+
   const { error } = await supabase.from("prompts").insert({
     title: title.trim(),
     description: description.trim() || null,
     prompt_text: editedPromptText,
-    content_type: selectedContentType as any,
+    content_type: normalizedContentType,
     collection: "general" as any, // Default collection value for backward compatibility
     tags: tags.length > 0 ? tags : null,
     is_template: isTemplate,
     meta_instructions: {
       category: selectedCategory,
+      content_subtype: selectedContentType,
       field_mappings: enableFieldMapping ? fieldMappings : undefined,
     },
-    organization_id: currentOrganizationId,
+    organization_id: organizationId,
     created_by: (await supabase.auth.getUser()).data.user?.id,
     deliverable_format: deliverableFormat ?? null,
   });
@@ -254,6 +274,9 @@ try {
                     <SheetContent side="bottom" className="bg-brand-parchment h-[50vh]">
                     <SheetHeader>
                       <SheetTitle>Insert Placeholder</SheetTitle>
+                      <SheetDescription>
+                        Choose a placeholder token to insert into this prompt template.
+                      </SheetDescription>
                     </SheetHeader>
                     <div className="space-y-2 mt-4 overflow-y-auto max-h-[calc(50vh-80px)]">
                       {placeholderSuggestions.map((suggestion) => (

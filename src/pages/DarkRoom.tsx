@@ -281,8 +281,9 @@ export default function DarkRoom() {
       aspectRatio: proSettings.aspectRatio || "1:1",
       outputFormat: "png",
       isImageStudio: true,
+      organizationId: orgId || undefined,
     }),
-    [heroImage, history, images.length, proSettings.aspectRatio, prompt, selectedProduct?.name, sessionId]
+    [heroImage, history, images.length, orgId, proSettings.aspectRatio, prompt, selectedProduct?.name, sessionId]
   );
 
   // Effects
