@@ -52,6 +52,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { LIBRARY_ROLE_PRODUCT } from "@/lib/imageLibraryTags";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentOrganizationId } from "@/hooks/useIndustryConfig";
 
@@ -242,6 +243,7 @@ export function ImageEditorModal({
           isRefinement: true,
           refinementInstruction: refinementPrompt,
           parentPrompt: image.prompt,
+          extraLibraryTags: [LIBRARY_ROLE_PRODUCT],
         },
       });
 
@@ -317,6 +319,7 @@ export function ImageEditorModal({
               goalType: "variation",
               aspectRatio: image.aspectRatio || "1:1",
               parentImageId: image.id,
+              extraLibraryTags: [LIBRARY_ROLE_PRODUCT],
             },
           });
 

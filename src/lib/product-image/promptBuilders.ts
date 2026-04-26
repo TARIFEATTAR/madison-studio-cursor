@@ -59,7 +59,27 @@ function plateClause(environmentPlateId: string): string {
 }
 
 function lightingClause(): string {
-  return "soft neutral studio lighting from above and slightly to the left";
+  return (
+    "lit by a single soft key light from upper-front-left at ~45° elevation " +
+    "(clock position 7:30–8:00 relative to the bottle base), with gentle " +
+    "bounce-fill from the right at matched color temperature; soft contact " +
+    "shadow casting back-right at the 2:00–2:30 clock position, extending " +
+    "30–40% of the bottle's height past the base on the diagonal, 25–30% " +
+    "opacity at the densest point, soft penumbra throughout — no shadow " +
+    "directly underneath the bottle"
+  );
+}
+
+function styleClause(): string {
+  return (
+    "Photographed in the editorial style of Aesop e-commerce hero photography " +
+    "crossed with Kinfolk magazine still-life — warm cream backdrop, single " +
+    "soft directional key light, single-subject composition, gallery-like " +
+    "restraint, slow editorial pace, considered and contemplative. Match the " +
+    "photographic style only; the subject geometry is locked to the input " +
+    "reference. No Aesop bottles, no Aesop labels, no Kinfolk magazine page " +
+    "chrome, no other brand product silhouettes."
+  );
 }
 
 function geometryClause(geometry: GeometrySpec): string {
@@ -88,7 +108,7 @@ export function buildClearMasterPrompt(ctx: FamilyPromptContext): PromptPayload 
     "of the glass. Neck threads are crisp and readable. Canvas centered",
     "horizontally, bottle bottom resting on a soft contact shadow at the",
     "canonical anchor line. No cap, no fitment, no accessories, no label.",
-    "Editorial luxury product photography.",
+    styleClause(),
   ].join(" ");
 
   const negative = [
@@ -168,10 +188,12 @@ export function buildReflectionRefinePrompt(): PromptPayload {
       "look artificial: one broad central light stripe dominates the body.",
       "Replace with realistic photographic highlights — multiple smaller",
       "specular highlights scattered along the shoulder and curves, broken",
-      "and irregular, consistent with a soft overhead studio light grazing",
-      "from the left. Preserve geometry, canvas, background (#EEE6D4), neck,",
-      "threads, and base thickness exactly. The glass must remain fully",
-      "neutral and colorless.",
+      "and irregular, consistent with a single soft key light from",
+      "upper-front-left at ~45° elevation (clock position 7:30–8:00). The",
+      "shadow should cast back-right at the 2:00–2:30 clock position, not",
+      "directly underneath. Preserve geometry, canvas, background (#EEE6D4),",
+      "neck, threads, and base thickness exactly. The glass must remain",
+      "fully neutral and colorless.",
     ].join(" "),
     mode: "thinking",
     referenceImageRequired: true,
@@ -194,7 +216,8 @@ export function buildFitmentPrompt(params: {
       "The fitment is shown upright, centered, with the neck-seating collar",
       "visible at the bottom. Metal surfaces (if present) show realistic",
       "brushed or polished detail with natural reflections, not CGI-clean.",
-      "No bottle, no cap, no hands. Editorial luxury product photography.",
+      "No bottle, no cap, no hands.",
+      styleClause(),
     ].join(" "),
     mode: "instant",
     referenceImageRequired: true,
@@ -216,7 +239,8 @@ export function buildCapPrompt(params: {
       "The cap is shown upright, centered, in its natural orientation",
       "(threaded opening downward). Surface treatment is",
       `${params.surface} — realistic material detail, no CGI sheen. No`,
-      "bottle, no fitment, no hands. Editorial luxury product photography.",
+      "bottle, no fitment, no hands.",
+      styleClause(),
     ].join(" "),
     mode: "instant",
     referenceImageRequired: true,

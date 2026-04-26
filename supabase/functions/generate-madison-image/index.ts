@@ -1893,13 +1893,60 @@ serve(async (req) => {
       },
     );
   } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    const errMsg = err.message || "Image generation failed.";
-    console.error("❌ generate-madison-image Error:", errMsg, err.stack);
+    // Robustly extract a useful message from whatever was thrown. Upstream
+    // code (provider SDKs, fetch, etc.) sometimes throws plain objects, not
+    // Error instances — `String(plainObject)` is "[object Object]" which
+    // produced a useless catch message. We now inspect every common shape.
+    let errMsg = "Image generation failed.";
+    let stack: string | undefined;
+    let errorType = "unknown";
+
+    if (error instanceof Error) {
+      errorType = error.name || "Error";
+      errMsg = error.message || errMsg;
+      stack = error.stack;
+    } else if (typeof error === "string") {
+      errorType = "string";
+      errMsg = error;
+    } else if (error && typeof error === "object") {
+      const obj = error as Record<string, unknown>;
+      errorType = typeof obj.name === "string" ? obj.name : "object";
+      if (typeof obj.message === "string" && obj.message.trim()) {
+        errMsg = obj.message;
+      } else if (typeof obj.error === "string" && obj.error.trim()) {
+        errMsg = obj.error;
+      } else if (
+        obj.error && typeof obj.error === "object" &&
+        typeof (obj.error as { message?: unknown }).message === "string"
+      ) {
+        errMsg = (obj.error as { message: string }).message;
+      } else {
+        try {
+          errMsg = JSON.stringify(error).slice(0, 800);
+        } catch {
+          errMsg = "Image generation failed (non-serializable error).";
+        }
+      }
+      if (typeof obj.stack === "string") stack = obj.stack;
+    }
+
+    // Log the FULL raw error too so dashboard logs always have the original
+    // shape regardless of what we send back to the client.
+    console.error(
+      "❌ generate-madison-image Error:",
+      JSON.stringify({ errorType, errMsg, stack }, null, 2),
+    );
+    try {
+      console.error("❌ raw thrown value:", error);
+    } catch {
+      console.error("❌ raw thrown value: <unloggable>");
+    }
+
     return new Response(
       JSON.stringify({
         error: errMsg,
-        details: Deno.env.get("ENVIRONMENT") === "development" ? err.stack : undefined,
+        errorType,
+        details: stack,
       }),
       {
         status: 500,

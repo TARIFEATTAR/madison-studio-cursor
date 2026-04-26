@@ -16,6 +16,8 @@ export {
 } from './RightPanel';
 export { DarkRoomHeader } from './DarkRoomHeader';
 export { DarkRoomMadisonDrawer } from './DarkRoomMadisonDrawer';
+export { MastersTabPanel } from './MastersTabPanel';
+export { ComponentsTabPanel } from './ComponentsTabPanel';
 export { MobileBottomSheet } from './MobileBottomSheet';
 export { MobileTabBar, type MobileTab } from './MobileTabBar';
 export { LightTable } from './LightTable';

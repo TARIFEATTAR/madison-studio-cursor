@@ -10,6 +10,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useCurrentOrganizationId } from "./useIndustryConfig";
 
+export interface UseImageLibraryOptions {
+  /** When set, only rows whose `library_tags` contains this string are returned. */
+  libraryTagContains?: string;
+  /** When set, rows that contain any of these tags (OR). Overrides `libraryTagContains` if both are passed. */
+  libraryTagContainsAny?: string[];
+}
+
 export interface LibraryImage {
     id: string;
     url: string;
@@ -29,55 +36,105 @@ interface GeneratedImageRow {
     final_prompt: string | null;
     created_at: string;
     is_archived: boolean;
+    library_tags?: string[] | null;
 }
 
-export function useImageLibrary() {
+const GENERATED_IMAGE_SELECT =
+    "id, image_url, session_name, goal_type, aspect_ratio, final_prompt, created_at, is_archived, library_tags";
+
+/**
+ * Fetch library rows with org-first / user fallback (matches existing hook behavior).
+ * Do not use PostgREST `.or(library_tags.cs.{…})` for multiple tags — values like
+ * `role:background-scene` contain `:` and break filter parsing, returning zero rows.
+ */
+async function fetchGeneratedImageRowsForLibrary(
+    userId: string,
+    orgId: string | null | undefined,
+    libraryTag: string | null,
+): Promise<GeneratedImageRow[]> {
+    let data: GeneratedImageRow[] | null = null;
+
+    const applyTag = <Q extends { contains: (col: string, val: string[]) => Q }>(q: Q): Q =>
+        libraryTag ? q.contains("library_tags", [libraryTag]) : q;
+
+    if (orgId) {
+        let q = supabase
+            .from("generated_images")
+            .select(GENERATED_IMAGE_SELECT)
+            .eq("organization_id", orgId)
+            .eq("is_archived", false)
+            .order("created_at", { ascending: false })
+            .limit(200);
+        q = applyTag(q);
+        const result = await q;
+
+        if (!result.error && result.data && result.data.length > 0) {
+            data = result.data as GeneratedImageRow[];
+        } else if (result.error) {
+            console.error("❌ useImageLibrary org query error:", result.error);
+        }
+    }
+
+    if (!data || data.length === 0) {
+        console.log("📸 useImageLibrary fallback to user_id...");
+        let q = supabase
+            .from("generated_images")
+            .select(GENERATED_IMAGE_SELECT)
+            .eq("user_id", userId)
+            .eq("is_archived", false)
+            .order("created_at", { ascending: false })
+            .limit(200);
+        q = applyTag(q);
+        const result = await q;
+
+        if (result.error) {
+            console.error("❌ useImageLibrary user query error:", result.error);
+            return [];
+        }
+        data = (result.data ?? []) as GeneratedImageRow[];
+    }
+
+    return data ?? [];
+}
+
+export function useImageLibrary(options: UseImageLibraryOptions = {}) {
+    const { libraryTagContains, libraryTagContainsAny } = options;
+    const tagFilters =
+        libraryTagContainsAny && libraryTagContainsAny.length > 0
+            ? libraryTagContainsAny
+            : libraryTagContains
+              ? [libraryTagContains]
+              : [];
     const { user } = useAuth();
     const { orgId } = useCurrentOrganizationId();
 
     return useQuery({
-        queryKey: ["image-library-hook", orgId, user?.id],
+        queryKey: ["image-library-hook", orgId, user?.id, tagFilters],
         queryFn: async (): Promise<LibraryImage[]> => {
             if (!user) return [];
 
-            console.log("📸 useImageLibrary fetching...", { orgId, userId: user.id });
+            console.log("📸 useImageLibrary fetching...", { orgId, userId: user.id, tagFilters });
 
-            let data: GeneratedImageRow[] | null = null;
-            let error: Error | null = null;
+            let data: GeneratedImageRow[];
 
-            // First try with organization_id if available
-            if (orgId) {
-                const result = await supabase
-                    .from("generated_images")
-                    .select("id, image_url, session_name, goal_type, aspect_ratio, final_prompt, created_at, is_archived")
-                    .eq("organization_id", orgId)
-                    .eq("is_archived", false)
-                    .order("created_at", { ascending: false })
-                    .limit(200); // Reasonable limit for modal performance
-
-                if (!result.error && result.data && result.data.length > 0) {
-                    data = result.data as GeneratedImageRow[];
-                } else if (result.error) {
-                    console.error("❌ useImageLibrary org query error:", result.error);
+            if (tagFilters.length <= 1) {
+                data = await fetchGeneratedImageRowsForLibrary(
+                    user.id,
+                    orgId,
+                    tagFilters.length === 1 ? tagFilters[0] : null,
+                );
+            } else {
+                const byId = new Map<string, GeneratedImageRow>();
+                for (const tag of tagFilters) {
+                    const rows = await fetchGeneratedImageRowsForLibrary(user.id, orgId, tag);
+                    for (const row of rows) {
+                        byId.set(row.id, row);
+                    }
                 }
-            }
-
-            // Fallback: fetch by user_id
-            if (!data || data.length === 0) {
-                console.log("📸 useImageLibrary fallback to user_id...");
-                const result = await supabase
-                    .from("generated_images")
-                    .select("id, image_url, session_name, goal_type, aspect_ratio, final_prompt, created_at, is_archived")
-                    .eq("user_id", user.id)
-                    .eq("is_archived", false)
-                    .order("created_at", { ascending: false })
-                    .limit(200);
-
-                if (result.error) {
-                    console.error("❌ useImageLibrary user query error:", result.error);
-                    return [];
-                }
-                data = result.data as GeneratedImageRow[];
+                data = Array.from(byId.values()).sort(
+                    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+                );
+                data = data.slice(0, 200);
             }
 
             console.log(`✅ useImageLibrary loaded ${data?.length || 0} images`);

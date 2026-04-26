@@ -13,6 +13,7 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { LIBRARY_ROLE_PRODUCT } from "@/lib/imageLibraryTags";
 import {
   buildSceneAnchor,
   buildVariationDescriptor,
@@ -246,7 +247,7 @@ export function runConsistencySet(
           // tags so the Library view can filter the same way the Pipeline
           // tracker does. Group-level tags (brand/family/shape) are stamped
           // server-side from pipelineContext.
-          const extraLibraryTags: string[] = [];
+          const extraLibraryTags: string[] = [LIBRARY_ROLE_PRODUCT];
           if (item.selection.bottleColor) {
             extraLibraryTags.push(`color:${item.selection.bottleColor.id}`);
           }

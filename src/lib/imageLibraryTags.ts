@@ -27,7 +27,27 @@ const anyClient = supabase as any;
 
 export const HERO_TAG = "hero" as const;
 
-export type LibraryTag = typeof HERO_TAG | (string & {});
+/**
+ * Stamped on images generated in Dark Room “background plate” mode so they
+ * appear when choosing a scene from the library for Background Scene compositing.
+ */
+export const BACKGROUND_SCENE_TAG = "kind:darkroom-background-scene" as const;
+
+/**
+ * Library browsing roles — mutually exclusive primary bucket per generated asset.
+ * Used by Image Library filters and Dark Room “pick from library” queries.
+ */
+export const LIBRARY_ROLE_PRODUCT = "role:product-image" as const;
+export const LIBRARY_ROLE_BACKGROUND_SCENE = "role:background-scene" as const;
+export const LIBRARY_ROLE_STYLE_REFERENCE = "role:style-reference" as const;
+
+export type LibraryTag =
+  | typeof HERO_TAG
+  | typeof BACKGROUND_SCENE_TAG
+  | typeof LIBRARY_ROLE_PRODUCT
+  | typeof LIBRARY_ROLE_BACKGROUND_SCENE
+  | typeof LIBRARY_ROLE_STYLE_REFERENCE
+  | (string & {});
 
 // ────────────────────────────────────────────────────────────────────────────
 // Single-image helpers

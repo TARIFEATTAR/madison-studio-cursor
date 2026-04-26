@@ -15,6 +15,16 @@ import { Button } from "@/components/ui/button";
 import { LibrarianTrigger } from "@/components/librarian";
 import { SavePromptDialog } from "@/components/prompt-library/SavePromptDialog";
 import { DEFAULT_IMAGE_AI_PROVIDER } from "@/config/imageSettings";
+import {
+  BACKGROUND_SCENE_TAG,
+  LIBRARY_ROLE_PRODUCT,
+  LIBRARY_ROLE_BACKGROUND_SCENE,
+  LIBRARY_ROLE_STYLE_REFERENCE,
+} from "@/lib/imageLibraryTags";
+
+/** Prepended in background-plate mode so models do not invent products on the set. */
+const BACKGROUND_PLATE_PROMPT_PREFIX =
+  "Empty set / background plate only. Do NOT show any products, bottles, cosmetics, jars, pumps, sprayers, caps, or labels. Leave believable negative space where products could be composited later. Professional studio or lifestyle environment. ";
 
 // Supabase & Auth
 import { supabase } from "@/integrations/supabase/client";
@@ -183,6 +193,15 @@ export default function DarkRoom() {
   // Composition preset selection (how to arrange products in scene)
   const [selectedCompositionPreset, setSelectedCompositionPreset] = useState<string | null>(null);
 
+  /** Generate empty scenes tagged for the Background Scene library picker. */
+  const [backgroundPlateMode, setBackgroundPlateMode] = useState(false);
+  /** Tag the next render for Image Library → Style references (mood / grade boards). */
+  const [styleReferenceLibraryOutput, setStyleReferenceLibraryOutput] = useState(false);
+
+  useEffect(() => {
+    if (!styleReference) setStyleReferenceLibraryOutput(false);
+  }, [styleReference]);
+
   // Prompt - initialize from URL if provided
   const [prompt, setPrompt] = useState(() => {
     const params = new URLSearchParams(location.search);
@@ -234,15 +253,22 @@ export default function DarkRoom() {
   const proSettingsCount = [proSettings.camera, proSettings.lighting, proSettings.environment].filter(Boolean).length;
 
   const canGenerate = useMemo(() => {
-    // Need either a prompt or a product image
-    const hasInput = prompt.trim().length > 0 || !!productImage;
-    // Not at session limit
+    const hasInput = backgroundPlateMode
+      ? prompt.trim().length > 0 || !!selectedBackgroundPreset
+      : prompt.trim().length > 0 || !!productImage;
     const hasCapacity = images.length < MAX_IMAGES_PER_SESSION;
-    // Not already generating
-    // Must have organization loaded
     const hasOrg = !!orgId && !orgLoading;
     return hasInput && hasCapacity && !isGenerating && hasOrg;
-  }, [prompt, productImage, images.length, isGenerating, orgId, orgLoading]);
+  }, [
+    backgroundPlateMode,
+    prompt,
+    productImage,
+    selectedBackgroundPreset,
+    images.length,
+    isGenerating,
+    orgId,
+    orgLoading,
+  ]);
 
   const suggestions = useMemo(
     () => generateSuggestions(!!productImage, !!backgroundImage, prompt),
@@ -282,8 +308,19 @@ export default function DarkRoom() {
       outputFormat: "png",
       isImageStudio: true,
       organizationId: orgId || undefined,
+      backgroundPlateMode,
     }),
-    [heroImage, history, images.length, orgId, proSettings.aspectRatio, prompt, selectedProduct?.name, sessionId]
+    [
+      heroImage,
+      history,
+      images.length,
+      orgId,
+      proSettings.aspectRatio,
+      prompt,
+      selectedProduct?.name,
+      sessionId,
+      backgroundPlateMode,
+    ]
   );
 
   // Effects
@@ -320,27 +357,29 @@ export default function DarkRoom() {
     }
 
     // Build effective prompt with presets
-    let effectivePrompt = prompt.trim() || "Professional product photography";
+    let effectivePrompt = backgroundPlateMode
+      ? (prompt.trim() || "Neutral studio environment ready for product compositing")
+      : (prompt.trim() || "Professional product photography");
 
-    // Count total products (main product image + product slots)
-    const activeProductSlots = productSlots.filter(slot => slot.imageUrl);
+    if (backgroundPlateMode) {
+      effectivePrompt = `${BACKGROUND_PLATE_PROMPT_PREFIX}${effectivePrompt}`;
+    }
+
+    const activeProductSlots = productSlots.filter((slot) => slot.imageUrl);
     const totalProductCount = (productImage ? 1 : 0) + activeProductSlots.length;
     let appliedBackgroundPrompt: string | null = null;
     let appliedCompositionPrompt: string | null = null;
 
-    // If a background preset is selected, add a random variation to the prompt
     if (selectedBackgroundPreset) {
       const backgroundVariation = getRandomBackgroundVariation(selectedBackgroundPreset);
       if (backgroundVariation) {
         appliedBackgroundPrompt = backgroundVariation;
-        // Append the background style to the user's prompt
         effectivePrompt = `${effectivePrompt}. Background: ${backgroundVariation}`;
         console.log("🎨 Background preset applied:", selectedBackgroundPreset, "→", backgroundVariation);
       }
     }
 
-    // If a composition preset is selected, add arrangement instructions
-    if (selectedCompositionPreset && totalProductCount > 0) {
+    if (!backgroundPlateMode && selectedCompositionPreset && totalProductCount > 0) {
       const compositionPrompt = getCompositionPrompt(selectedCompositionPreset, totalProductCount);
       if (compositionPrompt) {
         appliedCompositionPrompt = compositionPrompt;
@@ -349,28 +388,60 @@ export default function DarkRoom() {
       }
     }
 
+    const goalType = backgroundPlateMode
+      ? "background_scene"
+      : styleReferenceLibraryOutput && styleReference
+        ? "style_reference"
+        : "product_photography";
+
+    const hasProductRefs =
+      !backgroundPlateMode && (!!productImage || activeProductSlots.length > 0);
+    const hasBackgroundRef = !backgroundPlateMode && !!backgroundImage;
+
+    let extraLibraryTags: string[] | undefined;
+    if (backgroundPlateMode) {
+      extraLibraryTags = [BACKGROUND_SCENE_TAG, LIBRARY_ROLE_BACKGROUND_SCENE];
+    } else if (styleReferenceLibraryOutput && styleReference) {
+      extraLibraryTags = [LIBRARY_ROLE_STYLE_REFERENCE];
+    } else if (hasProductRefs) {
+      extraLibraryTags = [LIBRARY_ROLE_PRODUCT];
+    } else if (hasBackgroundRef) {
+      extraLibraryTags = [LIBRARY_ROLE_BACKGROUND_SCENE];
+    } else {
+      extraLibraryTags = [LIBRARY_ROLE_PRODUCT];
+    }
+
     // Trigger camera feedback (sound + flash) immediately on capture
     triggerCameraFeedback();
 
     setIsGenerating(true);
 
     try {
-      // Build reference images array
       const referenceImages: Array<{ url: string; description: string; label: string }> = [];
 
-      if (productImage) {
-        referenceImages.push({
-          url: productImage.url,
-          label: "Product",
-          description: "User-uploaded product for enhancement",
-        });
-      }
+      if (!backgroundPlateMode) {
+        if (productImage) {
+          referenceImages.push({
+            url: productImage.url,
+            label: "Product",
+            description: "User-uploaded product for enhancement",
+          });
+        }
 
-      if (backgroundImage) {
-        referenceImages.push({
-          url: backgroundImage.url,
-          label: "Background",
-          description: "Background scene for composition",
+        if (backgroundImage) {
+          referenceImages.push({
+            url: backgroundImage.url,
+            label: "Background",
+            description: "Background scene for composition",
+          });
+        }
+
+        activeProductSlots.forEach((slot, index) => {
+          referenceImages.push({
+            url: slot.imageUrl!,
+            label: `Product ${index + 1}`,
+            description: `Additional product ${index + 1} to composite into the scene`,
+          });
         });
       }
 
@@ -378,18 +449,11 @@ export default function DarkRoom() {
         referenceImages.push({
           url: styleReference.url,
           label: "Style Reference",
-          description: "Style reference for lighting and mood",
+          description: backgroundPlateMode
+            ? "Style and lighting reference for the empty scene"
+            : "Style reference for lighting and mood",
         });
       }
-
-      // Add multi-product slots (for compositing multiple products into scene)
-      activeProductSlots.forEach((slot, index) => {
-        referenceImages.push({
-          url: slot.imageUrl!,
-          label: `Product ${index + 1}`,
-          description: `Additional product ${index + 1} to composite into the scene`,
-        });
-      });
 
       // Build Pro Mode payload if active (only camera/lighting/environment, not AI settings)
       const proModePayload = proSettingsCount > 0 ? {
@@ -411,13 +475,15 @@ export default function DarkRoom() {
         visualSquad: proSettings.visualSquad || "auto",
         backgroundPreset: selectedBackgroundPreset,
         compositionPreset: selectedCompositionPreset,
+        backgroundPlateMode,
+        goalType,
       });
       console.log("🌑 Full payload being sent:", JSON.stringify({
         prompt: effectivePrompt,
         userId: user.id,
         organizationId: orgId,
         sessionId,
-        goalType: "product_photography",
+        goalType,
         aspectRatio: proSettings.aspectRatio || "1:1",
         aiProvider: proSettings.aiProvider || DEFAULT_IMAGE_AI_PROVIDER,
         resolution: proSettings.resolution || "standard",
@@ -426,6 +492,7 @@ export default function DarkRoom() {
         backgroundPrompt: appliedBackgroundPrompt,
         compositionPresetId: selectedCompositionPreset,
         compositionPrompt: appliedCompositionPrompt,
+        extraLibraryTags,
       }, null, 2));
 
       // Call the edge function
@@ -435,29 +502,29 @@ export default function DarkRoom() {
           userId: user.id,
           organizationId: orgId,
           sessionId,
-          goalType: "product_photography",
+          goalType,
           aspectRatio: proSettings.aspectRatio || "1:1",
           outputFormat: "png",
           referenceImages,
           proModeControls: proModePayload,
-          product_id: selectedProduct?.id,
-          // AI Model settings
+          product_id: backgroundPlateMode ? undefined : selectedProduct?.id,
           aiProvider: proSettings.aiProvider || DEFAULT_IMAGE_AI_PROVIDER,
           resolution: proSettings.resolution || "standard",
-          // Visual Squad for style direction
           visualSquad: proSettings.visualSquad,
           backgroundPresetId: selectedBackgroundPreset,
           backgroundPrompt: appliedBackgroundPrompt || undefined,
-          compositionPresetId: selectedCompositionPreset,
-          compositionPrompt: appliedCompositionPrompt || undefined,
-          productContext: selectedProduct
-            ? {
-              name: selectedProduct.name,
-              collection: selectedProduct.collection || "Unknown",
-              scent_family: selectedProduct.scentFamily || "Unspecified",
-              category: selectedProduct.category,
-            }
-            : undefined,
+          compositionPresetId: backgroundPlateMode ? undefined : selectedCompositionPreset,
+          compositionPrompt: backgroundPlateMode ? undefined : appliedCompositionPrompt || undefined,
+          extraLibraryTags,
+          productContext:
+            !backgroundPlateMode && selectedProduct
+              ? {
+                  name: selectedProduct.name,
+                  collection: selectedProduct.collection || "Unknown",
+                  scent_family: selectedProduct.scentFamily || "Unspecified",
+                  category: selectedProduct.category,
+                }
+              : undefined,
         },
       });
 
@@ -524,10 +591,15 @@ export default function DarkRoom() {
         ...prev.slice(0, 19), // Keep last 20
       ]);
 
-      // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ["generated-images"] });
+      queryClient.invalidateQueries({ queryKey: ["image-library-hook"] });
 
-      madison.success("Image created!", "Your image has been saved to the library.");
+      madison.success(
+        backgroundPlateMode ? "Background plate saved" : "Image created!",
+        backgroundPlateMode
+          ? "Tagged for Background Scene — pick it from Library on the left."
+          : "Your image has been saved to the library.",
+      );
     } catch (err) {
       console.error("❌ Unexpected error:", err);
       madison.error("Something went wrong");
@@ -547,6 +619,11 @@ export default function DarkRoom() {
     orgId,
     sessionId,
     queryClient,
+    backgroundPlateMode,
+    productSlots,
+    selectedBackgroundPreset,
+    selectedCompositionPreset,
+    styleReferenceLibraryOutput,
   ]);
 
   const handleSaveImage = useCallback(async (id: string) => {
@@ -690,6 +767,10 @@ export default function DarkRoom() {
           onStyleReferenceUpload={setStyleReference}
           proSettings={proSettings}
           onProSettingsChange={setProSettings}
+          backgroundPlateMode={backgroundPlateMode}
+          onBackgroundPlateModeChange={setBackgroundPlateMode}
+          styleReferenceLibraryOutput={styleReferenceLibraryOutput}
+          onStyleReferenceLibraryOutputChange={setStyleReferenceLibraryOutput}
         />
         <DarkRoomMadisonDrawer
           open={isMadisonOpen}
@@ -701,6 +782,7 @@ export default function DarkRoom() {
           heroImageUrl={heroImage?.imageUrl}
           onUsePrompt={handleUseMadisonPrompt}
           onSavePrompt={openSavePromptDialog}
+          backgroundPlateMode={backgroundPlateMode}
         />
         <SavePromptDialog
           open={isSavePromptOpen}
@@ -786,6 +868,10 @@ export default function DarkRoom() {
           onGenerate={handleGenerate}
           sessionCount={images.length}
           maxImages={MAX_IMAGES_PER_SESSION}
+          backgroundPlateMode={backgroundPlateMode}
+          onBackgroundPlateModeChange={setBackgroundPlateMode}
+          styleReferenceLibraryOutput={styleReferenceLibraryOutput}
+          onStyleReferenceLibraryOutputChange={setStyleReferenceLibraryOutput}
         />
 
         {/* Center Canvas: Preview & Results */}
@@ -844,6 +930,7 @@ export default function DarkRoom() {
         heroImageUrl={heroImage?.imageUrl}
         onUsePrompt={handleUseMadisonPrompt}
         onSavePrompt={openSavePromptDialog}
+        backgroundPlateMode={backgroundPlateMode}
       />
 
       <SavePromptDialog

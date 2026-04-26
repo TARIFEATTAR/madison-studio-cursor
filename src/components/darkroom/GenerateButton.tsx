@@ -7,6 +7,8 @@ interface GenerateButtonProps {
   hasProduct: boolean;
   hasBackground: boolean;
   hasStyle: boolean;
+  /** Empty-scene generation; tips and labels treat workflow differently. */
+  backgroundPlateMode?: boolean;
   proSettingsCount?: number;
   onGenerate: () => void;
   isGenerating: boolean;
@@ -19,6 +21,7 @@ export function GenerateButton({
   hasProduct,
   hasBackground,
   hasStyle,
+  backgroundPlateMode = false,
   proSettingsCount = 0,
   onGenerate,
   isGenerating,
@@ -27,8 +30,9 @@ export function GenerateButton({
   maxImages = 10,
 }: GenerateButtonProps) {
   const activeFeatures = [
-    hasProduct && "Product",
-    hasBackground && "Background",
+    backgroundPlateMode && "Background plate",
+    !backgroundPlateMode && hasProduct && "Product",
+    hasBackground && "Scene ref",
     hasStyle && "Style",
   ].filter(Boolean);
 
@@ -42,6 +46,9 @@ export function GenerateButton({
   const getTip = () => {
     if (atLimit) {
       return `Session limit reached (${maxImages} images). Save to continue.`;
+    }
+    if (backgroundPlateMode) {
+      return "Describe the empty set or pick a backdrop preset on the right — then capture a tagged scene for compositing.";
     }
     if (!hasProduct && !hasBackground) {
       return "Upload a product image to begin";
@@ -114,7 +121,7 @@ export function GenerateButton({
             >
               <Aperture size={18} />
               <span>
-                {hasProduct ? "Capture" : "Generate"}
+                {backgroundPlateMode ? "Plate" : hasProduct ? "Capture" : "Generate"}
               </span>
             </motion.div>
           ) : (

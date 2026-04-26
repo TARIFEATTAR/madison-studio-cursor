@@ -29,6 +29,10 @@ interface ImageLibraryModalProps {
     onSelectImage: (image: { url: string; file?: File; name?: string }) => void;
     libraryImages?: LibraryImage[];
     title?: string;
+    /** When set, only loads generated_images rows whose library_tags include this token. */
+    libraryTagFilter?: string;
+    /** OR filter: any of these tags. If set, takes precedence over `libraryTagFilter`. */
+    libraryTagContainsAny?: string[];
 }
 
 const STORAGE_KEY = "madison-image-library";
@@ -57,7 +61,9 @@ export function ImageLibraryModal({
     onOpenChange,
     onSelectImage,
     libraryImages: externalImages,
-    title = "Select Image"
+    title = "Select Image",
+    libraryTagFilter,
+    libraryTagContainsAny,
 }: ImageLibraryModalProps) {
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [localImages, setLocalImages] = useState<LibraryImage[]>(() => getStoredImages());
@@ -66,7 +72,13 @@ export function ImageLibraryModal({
     const { toast } = useToast();
 
     // Fetch from Supabase
-    const { data: supabaseImages = [], isLoading } = useImageLibrary();
+    const { data: supabaseImages = [], isLoading } = useImageLibrary(
+        libraryTagContainsAny?.length
+            ? { libraryTagContainsAny }
+            : libraryTagFilter
+              ? { libraryTagContains: libraryTagFilter }
+              : {},
+    );
 
     // Merge: external prop → supabase → localStorage (dedup by id)
     const seen = new Set<string>();
@@ -153,7 +165,9 @@ export function ImageLibraryModal({
                         {title}
                     </DialogTitle>
                     <DialogDescription className="text-sm text-[#888899]">
-                        Choose an existing library image or add a new one from desktop.
+                        {libraryTagFilter
+                            ? "Images tagged for this use in Dark Room. Generate more from Background plate mode if this list is empty."
+                            : "Choose an existing library image or add a new one from desktop."}
                     </DialogDescription>
                 </DialogHeader>
 

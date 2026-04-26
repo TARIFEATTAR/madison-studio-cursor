@@ -33,6 +33,8 @@ interface SessionContext {
   visualStandards?: any;
   brandName?: string; // Added for brand-specific guidelines
   organizationId?: string;
+  /** Dark Room: generating empty background plates (no products in frame). */
+  backgroundPlateMode?: boolean;
 }
 
 interface DraftRequest {
@@ -408,6 +410,7 @@ You are Madison, the AI Creative Director assisting in the Image Studio for AI-p
 Session: "${sessionContext.sessionName || 'New Session'}"
 Progress: ${sessionContext.imagesGenerated}/${sessionContext.maxImages} images generated
 Export Settings: ${sessionContext.aspectRatio} • ${sessionContext.outputFormat}
+${sessionContext.backgroundPlateMode ? "Mode: BACKGROUND PLATE (empty scene, no products — for later multi-product compositing)\n" : ""}
 
 ${sessionContext.heroImage ? 
   `Current Hero Image: "${truncateForModel(sessionContext.heroImage.prompt, 220)}"` :
@@ -475,6 +478,7 @@ Be conversational, encouraging, and editorial in your tone.
                   referenceImageCount: consultImages.length,
                   brandName: sessionContext.brandName,
                   proModeActive: false,
+                  backgroundPlateMode: Boolean(sessionContext.backgroundPlateMode),
                 }
               : undefined,
           },

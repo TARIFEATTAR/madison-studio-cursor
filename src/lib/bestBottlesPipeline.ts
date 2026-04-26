@@ -420,6 +420,30 @@ export async function listPipelineGroups(
 }
 
 /**
+ * Find the first Pipeline row whose `convex_slug` matches the given
+ * Convex productGroup slug. Used by the Studio's Masters tab to locate
+ * the Pipeline-side record when the operator approves a generated master,
+ * so status + approval metadata can be written back.
+ *
+ * Returns null if no row matches — the caller should degrade gracefully
+ * (save to Library but skip the Pipeline status write).
+ */
+export async function findPipelineGroupByConvexSlug(
+  organizationId: string,
+  convexSlug: string,
+): Promise<PipelineGroup | null> {
+  const { data, error } = await supabase
+    .from("best_bottles_pipeline_groups")
+    .select("*")
+    .eq("organization_id", organizationId)
+    .eq("convex_slug", convexSlug)
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as PipelineGroup | null) ?? null;
+}
+
+/**
  * Group rows by (family + capacity_ml + thread_size) — the "shape cohort"
  * that can share a single master reference image in Consistency Mode.
  * Used by the Pipeline page to let the operator launch one generation run

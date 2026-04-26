@@ -10,6 +10,8 @@ import {
   Filter,
   ImageDown,
   Star,
+  Layers,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -458,14 +460,22 @@ export default function BestBottlesPipeline() {
           />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {shapeGroups.map((group) => (
-              <ShapeGroupCard
-                key={group.key}
-                group={group}
-                onLaunch={() => handleLaunchShapeGroup(group)}
-                onToggleMaster={handleToggleMasterReference}
-              />
-            ))}
+            {shapeGroups.map((group) => {
+              const studioSlug = resolveStudioSlugForGroup(group);
+              return (
+                <ShapeGroupCard
+                  key={group.key}
+                  group={group}
+                  onLaunch={() => handleLaunchShapeGroup(group)}
+                  onOpenStudio={
+                    studioSlug
+                      ? () => navigate(`/best-bottles/studio/${studioSlug}`)
+                      : null
+                  }
+                  onToggleMaster={handleToggleMasterReference}
+                />
+              );
+            })}
           </div>
         )}
       </div>
@@ -526,13 +536,36 @@ function FilterChip({
   );
 }
 
+/**
+ * Resolve which Convex productGroup slug to use when opening the Studio
+ * for a ShapeGroup. A ShapeGroup is family × capacity × thread; a Convex
+ * productGroup is family × capacity × color — so one ShapeGroup can map to
+ * multiple Convex slugs (one per color variant). Preference order:
+ *   1. The pinned hero-reference row's slug (matches the existing Launch
+ *      button's master-preference behavior)
+ *   2. The first row with a non-null convex_slug
+ * Returns null when no row carries a slug — caller disables the button.
+ */
+function resolveStudioSlugForGroup(group: ShapeGroup): string | null {
+  const pinned = group.rows.find(
+    (r) => r.is_hero_reference && typeof r.convex_slug === "string" && r.convex_slug,
+  );
+  if (pinned?.convex_slug) return pinned.convex_slug;
+  const firstWithSlug = group.rows.find(
+    (r) => typeof r.convex_slug === "string" && r.convex_slug,
+  );
+  return firstWithSlug?.convex_slug ?? null;
+}
+
 function ShapeGroupCard({
   group,
   onLaunch,
+  onOpenStudio,
   onToggleMaster,
 }: {
   group: ShapeGroup;
   onLaunch: () => void;
+  onOpenStudio: (() => void) | null;
   onToggleMaster: (row: PipelineGroup) => void | Promise<void>;
 }) {
   const withHero = group.rows.filter(
@@ -571,14 +604,28 @@ function ShapeGroupCard({
             </span>
           </div>
         </div>
-        <Button
-          size="sm"
-          onClick={onLaunch}
-          className="bg-[var(--darkroom-accent,#B8956A)] text-black hover:bg-[var(--darkroom-accent,#B8956A)]/90"
-        >
-          <Play className="w-3.5 h-3.5 mr-1.5" />
-          Launch
-        </Button>
+        <div className="flex items-center gap-2">
+          {onOpenStudio && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onOpenStudio}
+              className="border-white/15 bg-white/[0.02] text-white hover:bg-white/[0.06] hover:text-white"
+              title="Masters + paper-doll components + composite preview for this shape group"
+            >
+              <Layers className="w-3.5 h-3.5 mr-1.5" />
+              Open Studio
+            </Button>
+          )}
+          <Button
+            size="sm"
+            onClick={onLaunch}
+            className="bg-[var(--darkroom-accent,#B8956A)] text-black hover:bg-[var(--darkroom-accent,#B8956A)]/90"
+          >
+            <Play className="w-3.5 h-3.5 mr-1.5" />
+            Launch
+          </Button>
+        </div>
       </div>
 
       {/* Reference thumbnail strip — rendered only when at least one row
@@ -653,18 +700,22 @@ function SkuRow({ row }: { row: PipelineGroup }) {
     row.legacy_has_hero_image ||
     row.madison_status === "approved" ||
     row.madison_status === "synced";
-  const inProgress =
-    row.madison_status === "queued" ||
-    row.madison_status === "generating" ||
-    row.madison_status === "generated" ||
-    row.madison_status === "qa-pending";
+  // Actively working — the model is producing an image right now. Only these
+  // two states should animate. "generated" / "qa-pending" are finished but
+  // awaiting operator sign-off, not still working.
+  const activelyWorking =
+    row.madison_status === "queued" || row.madison_status === "generating";
+  const awaitingApproval =
+    row.madison_status === "generated" || row.madison_status === "qa-pending";
 
   return (
     <div className="flex items-center gap-2 text-xs py-1 px-2 rounded hover:bg-white/[0.03] transition-colors">
       {done ? (
         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-      ) : inProgress ? (
+      ) : activelyWorking ? (
         <Loader2 className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 animate-spin" />
+      ) : awaitingApproval ? (
+        <Eye className="w-3.5 h-3.5 text-violet-400 flex-shrink-0" />
       ) : (
         <Circle className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />
       )}

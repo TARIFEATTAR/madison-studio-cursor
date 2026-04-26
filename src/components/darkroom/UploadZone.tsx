@@ -118,14 +118,16 @@ export function UploadZone({
     [processFile]
   );
 
-  const handleClick = useCallback(() => {
+  const openFilePicker = useCallback(() => {
     if (disabled) return;
-    if (onLibraryOpen) {
-      onLibraryOpen();
-    } else if (inputRef.current) {
-      inputRef.current.click();
-    }
-  }, [disabled, onLibraryOpen]);
+    inputRef.current?.click();
+  }, [disabled]);
+
+  /** When `onLibraryOpen` is set, empty state uses explicit Upload / Library actions instead of a single click target. */
+  const handleZoneClick = useCallback(() => {
+    if (disabled || image || onLibraryOpen) return;
+    openFilePicker();
+  }, [disabled, image, onLibraryOpen, openFilePicker]);
 
   const handleRemove = useCallback(
     (e: React.MouseEvent) => {
@@ -171,7 +173,7 @@ export function UploadZone({
           image && "has-image",
           disabled && "opacity-50 cursor-not-allowed"
         )}
-        onClick={!image ? handleClick : undefined}
+        onClick={!image ? handleZoneClick : undefined}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -201,8 +203,40 @@ export function UploadZone({
                   <Upload className="upload-icon" />
                 </motion.div>
               )}
-              <p className="upload-text">Drop or click to upload</p>
+              <p className="upload-text">
+                {onLibraryOpen ? "Drop an image here, or choose below" : "Drop or click to upload"}
+              </p>
               <p className="upload-description">{description}</p>
+              {onLibraryOpen && (
+                <div className="upload-empty__actions mt-4 flex w-full max-w-[14rem] flex-col gap-2 sm:flex-row sm:justify-center">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    className="upload-empty__btn h-9 flex-1 text-sm font-medium sm:flex-initial"
+                    disabled={disabled}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openFilePicker();
+                    }}
+                  >
+                    Upload file
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="upload-empty__btn h-9 flex-1 border-white/25 bg-white/[0.07] text-sm font-medium text-[var(--darkroom-text)] hover:bg-white/10 sm:flex-initial"
+                    disabled={disabled}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onLibraryOpen();
+                    }}
+                  >
+                    Library
+                  </Button>
+                </div>
+              )}
             </motion.div>
           ) : (
             // Filled State
@@ -277,8 +311,6 @@ export function UploadZone({
           )}
         </AnimatePresence>
       </div>
-
-      <p className="upload-zone-help">{description}</p>
     </motion.div>
   );
 }

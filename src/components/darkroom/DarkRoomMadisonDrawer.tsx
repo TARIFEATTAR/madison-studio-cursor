@@ -29,6 +29,8 @@ interface AssistantSessionContext {
   visualStandards?: unknown;
   brandName?: string;
   organizationId?: string;
+  /** When true, user is generating empty background plates (no products). */
+  backgroundPlateMode?: boolean;
 }
 
 interface ReferenceAsset {
@@ -46,6 +48,7 @@ interface DarkRoomMadisonDrawerProps {
   heroImageUrl?: string | null;
   onUsePrompt: (prompt: string) => void;
   onSavePrompt: (prompt: string, suggestedTitle?: string) => void;
+  backgroundPlateMode?: boolean;
 }
 
 interface DraftRequest {
@@ -117,6 +120,7 @@ export function DarkRoomMadisonDrawer({
   heroImageUrl,
   onUsePrompt,
   onSavePrompt,
+  backgroundPlateMode = false,
 }: DarkRoomMadisonDrawerProps) {
   const [draftRequest, setDraftRequest] = useState<DraftRequest | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
@@ -161,47 +165,29 @@ export function DarkRoomMadisonDrawer({
 
   const topContent = (
     <div className="space-y-3">
-      <div className="rounded-xl border border-white/[0.08] bg-black/20 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-[var(--darkroom-text-dim)]">
-              Creative Director
+      <div className="rounded-lg border border-white/[0.06] bg-black/20 p-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-[var(--darkroom-text-dim)]">
+              Current brief
             </p>
-            <h4 className="mt-1 text-[15px] font-semibold text-[var(--darkroom-text)]">
-              Madison helps shape stronger Dark Room prompts.
-            </h4>
             <p className="mt-1 text-[12px] leading-relaxed text-[var(--darkroom-text-muted)]">
-              Ask for hero prompts, image critique, and tighter variations. When something is ready,
-              send it straight back into the prompt box or save it to the Librarian.
+              {hasPrompt
+                ? currentPrompt
+                : "No prompt yet — use the actions below or chat to build one."}
             </p>
           </div>
-          <div className="rounded-full border border-[var(--darkroom-accent)]/20 bg-[var(--darkroom-accent)]/10 p-2 text-[var(--darkroom-accent)]">
-            <Sparkles className="h-4 w-4" />
-          </div>
-        </div>
-
-        <div className="mt-3 rounded-lg border border-white/[0.06] bg-black/20 p-3">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-[var(--darkroom-text-dim)]">
-                Current Brief
-              </p>
-              <p className="mt-1 text-[12px] leading-relaxed text-[var(--darkroom-text-muted)]">
-                {hasPrompt ? currentPrompt : "No prompt written yet. Madison can build one from your references and session context."}
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleSaveCurrentPrompt}
-              disabled={!hasPrompt}
-              className="h-8 shrink-0 border border-white/[0.08] bg-white/[0.03] text-[11px] text-[var(--darkroom-text)] hover:bg-white/[0.06]"
-            >
-              <Bookmark className="mr-1.5 h-3.5 w-3.5" />
-              Save Prompt
-            </Button>
-          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleSaveCurrentPrompt}
+            disabled={!hasPrompt}
+            className="h-8 shrink-0 border border-white/[0.08] bg-white/[0.03] text-[11px] text-[var(--darkroom-text)] hover:bg-white/[0.06]"
+          >
+            <Bookmark className="mr-1.5 h-3.5 w-3.5" />
+            Save Prompt
+          </Button>
         </div>
       </div>
 
@@ -224,6 +210,40 @@ export function DarkRoomMadisonDrawer({
             <span className="block whitespace-normal break-words text-[12px] font-medium leading-5">Write Hero Prompt</span>
             <span className="mt-1 block whitespace-normal break-words text-[11px] leading-relaxed text-[var(--darkroom-text-muted)]">
               Build a clean production-ready prompt from the current setup.
+            </span>
+          </span>
+        </Button>
+
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() =>
+            queuePrompt(
+              "background-plate-prompt",
+              `The operator is in BACKGROUND PLATE mode: they need an empty scene with NO products, bottles, or packaging — only environment, surfaces, and lighting — suitable for later compositing multiple products (up to six) and inpainting.
+
+Use the current brief and any style reference images. Respond with:
+
+Final Prompt:
+\`\`\`prompt
+<one production-ready background-plate prompt>
+\`\`\`
+
+Checklist:
+- Confirms zero products / bottles / labels
+- Describes surface, backdrop, and light
+- Notes negative space for placement`,
+              referenceAssets.filter((a) => a.label === "Style").map((asset) => asset.url)
+            )
+          }
+          disabled={pendingAction !== null || !backgroundPlateMode}
+          className="h-auto min-h-[84px] w-full overflow-hidden items-start justify-start rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-3 text-left text-[var(--darkroom-text)] hover:bg-white/[0.06] disabled:opacity-40"
+        >
+          <ImageIcon className="mr-2 mt-0.5 h-4 w-4 shrink-0 text-[var(--darkroom-accent)]" />
+          <span className="min-w-0 flex-1">
+            <span className="block whitespace-normal break-words text-[12px] font-medium leading-5">Background plate prompt</span>
+            <span className="mt-1 block whitespace-normal break-words text-[11px] leading-relaxed text-[var(--darkroom-text-muted)]">
+              Turn on “Background plate mode” in the left rail, then chat for an empty-set prompt (upscale-ready).
             </span>
           </span>
         </Button>

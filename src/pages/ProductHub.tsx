@@ -90,6 +90,7 @@ import { useSuppliers, COMPANY_TYPES } from "@/hooks/useSuppliers";
 import { Building2, Factory, Truck } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { ProductInternalSidebar } from "@/components/products/ProductInternalSidebar";
+import { ProductBottleReferenceSection } from "@/components/products/ProductBottleReferenceSection";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PRODUCT INFO TAB
@@ -699,6 +700,7 @@ export default function ProductHub() {
       collections: editedProduct.collections,
       tags: editedProduct.tags,
       hero_image_id: editedProduct.hero_image_id,
+      hero_image_external_url: editedProduct.hero_image_external_url,
       brand_voice_notes: editedProduct.brand_voice_notes,
       target_audience: editedProduct.target_audience,
       key_benefits: editedProduct.key_benefits,
@@ -1066,6 +1068,15 @@ export default function ProductHub() {
 
             {activeTab === "packaging" && (
               <>
+                <div className="mb-8">
+                  <ProductBottleReferenceSection
+                    organizationId={organizationId}
+                    productId={productId!}
+                    sku={displayProduct.sku}
+                    parentSku={(displayProduct.metadata?.parent_sku as string) || null}
+                    canEdit={canEdit("packaging") || canEdit("media")}
+                  />
+                </div>
                 <PackagingSection
                   productId={productId!}
                   productName={displayProduct.name}

@@ -12,7 +12,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Dices, Camera, Loader2, ChevronLeft, X, Save, Trash2, CheckCircle, Wand2, Sparkles, Bookmark } from "lucide-react";
+import { Plus, Dices, Camera, Loader2, ChevronLeft, X, Save, Trash2, CheckCircle, Wand2, Sparkles, Bookmark, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { MobileSettingsGrid } from "./MobileSettingsGrid";
 import { MobileBottomSheet } from "./MobileBottomSheet";
@@ -20,9 +20,17 @@ import { UploadZone } from "./UploadZone";
 import { ThumbnailCarousel } from "./ThumbnailCarousel";
 import { DevelopingAnimation, useDevelopingAnimation } from "./DevelopingAnimation";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import type { ProModeSettings } from "./ProSettings";
 import { Product } from "@/hooks/useProducts";
 import { ProductSelector } from "@/components/forge/ProductSelector";
+import { ImageLibraryModal } from "@/components/image-editor/ImageLibraryModal";
+import {
+  BACKGROUND_SCENE_TAG,
+  LIBRARY_ROLE_BACKGROUND_SCENE,
+} from "@/lib/imageLibraryTags";
+import { StyleReferenceGuideModal } from "./StyleReferenceGuideModal";
 
 interface UploadedImage {
   url: string;
@@ -77,6 +85,12 @@ interface MobileDarkRoomProps {
   // Pro Settings
   proSettings: ProModeSettings;
   onProSettingsChange: (settings: ProModeSettings) => void;
+
+  backgroundPlateMode: boolean;
+  onBackgroundPlateModeChange: (value: boolean) => void;
+
+  styleReferenceLibraryOutput: boolean;
+  onStyleReferenceLibraryOutputChange: (value: boolean) => void;
 }
 
 export function MobileDarkRoom({
@@ -106,10 +120,16 @@ export function MobileDarkRoom({
   onStyleReferenceUpload,
   proSettings,
   onProSettingsChange,
+  backgroundPlateMode,
+  onBackgroundPlateModeChange,
+  styleReferenceLibraryOutput,
+  onStyleReferenceLibraryOutputChange,
 }: MobileDarkRoomProps) {
   const navigate = useNavigate();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [inputsSheetOpen, setInputsSheetOpen] = useState(false);
+  const [showBackgroundLibrary, setShowBackgroundLibrary] = useState(false);
+  const [styleGuideOpen, setStyleGuideOpen] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState<GeneratedImage | null>(null);
 
   const heroImage = images.find((img) => img.id === heroImageId) || images[0] || null;
@@ -367,6 +387,18 @@ export function MobileDarkRoom({
         className="mobile-inputs-sheet"
       >
         <div className="space-y-4 p-2">
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--darkroom-border)] bg-[var(--darkroom-bg)] p-3">
+            <Label htmlFor="mobile-bg-plate" className="text-sm text-[var(--darkroom-text-muted)]">
+              Background plate mode
+            </Label>
+            <Switch
+              id="mobile-bg-plate"
+              checked={backgroundPlateMode}
+              onCheckedChange={onBackgroundPlateModeChange}
+              disabled={isGenerating}
+            />
+          </div>
+
           {/* Product Selector */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-[var(--darkroom-text-muted)]">
@@ -385,11 +417,15 @@ export function MobileDarkRoom({
           <UploadZone
             type="product"
             label="Product Image"
-            description="For enhancement & placement"
+            description={
+              backgroundPlateMode
+                ? "Skipped in plate mode — add products after you have a scene"
+                : "For enhancement & placement"
+            }
             image={productImage}
             onUpload={onProductImageUpload}
             onRemove={() => onProductImageUpload(null)}
-            disabled={isGenerating}
+            disabled={isGenerating || backgroundPlateMode}
           />
 
           {/* Background Scene */}
@@ -400,19 +436,47 @@ export function MobileDarkRoom({
             image={backgroundImage}
             onUpload={onBackgroundImageUpload}
             onRemove={() => onBackgroundImageUpload(null)}
+            onLibraryOpen={() => setShowBackgroundLibrary(true)}
             disabled={isGenerating}
           />
 
           {/* Style Reference */}
-          <UploadZone
-            type="style"
-            label="Style Reference"
-            description="Matches lighting & mood"
-            image={styleReference}
-            onUpload={onStyleReferenceUpload}
-            onRemove={() => onStyleReferenceUpload(null)}
-            disabled={isGenerating}
-          />
+          <div className="space-y-2">
+            <div className="flex items-center justify-end">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs text-[var(--darkroom-text-muted)]"
+                onClick={() => setStyleGuideOpen(true)}
+              >
+                <BookOpen className="w-3.5 h-3.5 mr-1.5" />
+                Style reference guide
+              </Button>
+            </div>
+            <UploadZone
+              type="style"
+              label="Style Reference"
+              description="Matches lighting & mood"
+              image={styleReference}
+              onUpload={onStyleReferenceUpload}
+              onRemove={() => onStyleReferenceUpload(null)}
+              disabled={isGenerating}
+            />
+            {styleReference ? (
+              <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--darkroom-border)] bg-[var(--darkroom-bg)] p-3">
+                <Label htmlFor="mobile-style-lib-out" className="text-sm text-[var(--darkroom-text-muted)]">
+                  Save render as style reference in library
+                </Label>
+                <Switch
+                  id="mobile-style-lib-out"
+                  checked={styleReferenceLibraryOutput}
+                  onCheckedChange={onStyleReferenceLibraryOutputChange}
+                  disabled={isGenerating || backgroundPlateMode}
+                />
+              </div>
+            ) : null}
+          </div>
 
           {/* Done Button */}
           <Button
@@ -535,6 +599,20 @@ export function MobileDarkRoom({
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ImageLibraryModal
+        open={showBackgroundLibrary}
+        onOpenChange={setShowBackgroundLibrary}
+        onSelectImage={(img) => {
+          onBackgroundImageUpload({ url: img.url, name: img.name });
+          setShowBackgroundLibrary(false);
+          setInputsSheetOpen(false);
+        }}
+        title="Background scenes"
+        libraryTagContainsAny={[LIBRARY_ROLE_BACKGROUND_SCENE, BACKGROUND_SCENE_TAG]}
+      />
+
+      <StyleReferenceGuideModal open={styleGuideOpen} onOpenChange={setStyleGuideOpen} />
     </div>
   );
 }

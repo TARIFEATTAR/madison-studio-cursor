@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Package, Plus, Image, Palette, Layers } from "lucide-react";
+import { Package, Image, Palette, Layers, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  BACKGROUND_SCENE_TAG,
+  LIBRARY_ROLE_BACKGROUND_SCENE,
+} from "@/lib/imageLibraryTags";
+import { StyleReferenceGuideModal } from "./StyleReferenceGuideModal";
 import { UploadZone } from "./UploadZone";
 import { GenerateButton } from "./GenerateButton";
 import { LEDIndicator } from "./LEDIndicator";
@@ -43,6 +50,14 @@ interface LeftRailProps {
   // Session info
   sessionCount: number;
   maxImages: number;
+
+  /** When true, the next generation is an empty background plate (tagged for scene library). */
+  backgroundPlateMode: boolean;
+  onBackgroundPlateModeChange: (value: boolean) => void;
+
+  /** When true and a style reference image is set, the render is tagged for the style-reference library bucket. */
+  styleReferenceLibraryOutput: boolean;
+  onStyleReferenceLibraryOutputChange: (value: boolean) => void;
 }
 
 export function LeftRail({
@@ -61,10 +76,16 @@ export function LeftRail({
   onGenerate,
   sessionCount,
   maxImages,
+  backgroundPlateMode,
+  onBackgroundPlateModeChange,
+  styleReferenceLibraryOutput,
+  onStyleReferenceLibraryOutputChange,
 }: LeftRailProps) {
   const [showBackgroundUpload, setShowBackgroundUpload] = useState(false);
   const [showStyleUpload, setShowStyleUpload] = useState(false);
   const [showProductLibrary, setShowProductLibrary] = useState(false);
+  const [showBackgroundLibrary, setShowBackgroundLibrary] = useState(false);
+  const [styleGuideOpen, setStyleGuideOpen] = useState(false);
 
   const proSettingsCount = Object.values(proSettings).filter(Boolean).length;
 
@@ -145,6 +166,27 @@ export function LeftRail({
           </span>
         </div>
 
+        <div className="mb-4 rounded-lg border border-[var(--darkroom-border)] bg-[var(--camera-body-deep)]/50 p-3 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <Label
+              htmlFor="background-plate-mode"
+              className="text-[10px] font-mono uppercase tracking-[0.08em] text-[var(--darkroom-text-dim)] cursor-pointer"
+            >
+              Background plate mode
+            </Label>
+            <Switch
+              id="background-plate-mode"
+              checked={backgroundPlateMode}
+              onCheckedChange={onBackgroundPlateModeChange}
+              disabled={isGenerating}
+            />
+          </div>
+          <p className="text-[10px] leading-relaxed text-[var(--darkroom-text-muted)]">
+            Generates an empty scene only (no bottles). Saved with a background tag so you can load it
+            here later and composite 2–6 products, then refine with inpainting.
+          </p>
+        </div>
+
         {/* Primary: Product Image - Always Visible */}
         <div className="mb-3">
           <div className="flex items-center gap-2 mb-2">
@@ -156,12 +198,16 @@ export function LeftRail({
           <UploadZone
             type="product"
             label="Product Image"
-            description="For enhancement & placement"
+            description={
+              backgroundPlateMode
+                ? "Optional in plate mode — add products after you have a scene"
+                : "For enhancement & placement"
+            }
             image={productImage}
             onUpload={onProductImageUpload}
             onRemove={() => onProductImageUpload(null)}
             onLibraryOpen={() => setShowProductLibrary(true)}
-            disabled={isGenerating}
+            disabled={isGenerating || backgroundPlateMode}
           />
         </div>
 
@@ -199,6 +245,7 @@ export function LeftRail({
                     onBackgroundImageUpload(null);
                     setShowBackgroundUpload(false);
                   }}
+                  onLibraryOpen={() => setShowBackgroundLibrary(true)}
                   disabled={isGenerating}
                 />
               </div>
@@ -226,6 +273,16 @@ export function LeftRail({
                   <span className="text-[9px] font-semibold uppercase tracking-[0.08em] text-[var(--darkroom-text-dim)] font-mono">
                     Style Reference
                   </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-1.5 ml-auto text-[9px] font-mono uppercase tracking-wider text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-accent)]"
+                    onClick={() => setStyleGuideOpen(true)}
+                  >
+                    <BookOpen className="w-3 h-3 mr-1" />
+                    Guide
+                  </Button>
                 </div>
                 <UploadZone
                   type="style"
@@ -239,6 +296,22 @@ export function LeftRail({
                   }}
                   disabled={isGenerating}
                 />
+                {styleReference ? (
+                  <div className="mt-2 flex items-center justify-between gap-2 rounded-md border border-[var(--darkroom-border)] bg-[var(--camera-body-deep)]/40 px-2 py-1.5">
+                    <Label
+                      htmlFor="style-ref-library-out"
+                      className="text-[10px] text-[var(--darkroom-text-muted)] cursor-pointer leading-snug"
+                    >
+                      Save this render to the library as a style reference
+                    </Label>
+                    <Switch
+                      id="style-ref-library-out"
+                      checked={styleReferenceLibraryOutput}
+                      onCheckedChange={onStyleReferenceLibraryOutputChange}
+                      disabled={isGenerating || backgroundPlateMode}
+                    />
+                  </div>
+                ) : null}
               </div>
             )}
           </AnimatePresence>
@@ -247,9 +320,10 @@ export function LeftRail({
 
       {/* Generate Button - Sticky Bottom */}
       <GenerateButton
-        hasProduct={!!productImage}
+        hasProduct={backgroundPlateMode ? false : !!productImage}
         hasBackground={!!backgroundImage}
         hasStyle={!!styleReference}
+        backgroundPlateMode={backgroundPlateMode}
         proSettingsCount={proSettingsCount}
         onGenerate={onGenerate}
         isGenerating={isGenerating}
@@ -264,6 +338,19 @@ export function LeftRail({
         onSelectImage={onProductImageUpload}
         title="Select Product Image"
       />
+
+      <ImageLibraryModal
+        open={showBackgroundLibrary}
+        onOpenChange={setShowBackgroundLibrary}
+        onSelectImage={(img) => {
+          onBackgroundImageUpload({ url: img.url, name: img.name });
+          setShowBackgroundUpload(true);
+        }}
+        title="Background scenes"
+        libraryTagContainsAny={[LIBRARY_ROLE_BACKGROUND_SCENE, BACKGROUND_SCENE_TAG]}
+      />
+
+      <StyleReferenceGuideModal open={styleGuideOpen} onOpenChange={setStyleGuideOpen} />
     </aside>
   );
 }

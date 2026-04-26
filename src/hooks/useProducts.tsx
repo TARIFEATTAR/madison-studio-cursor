@@ -47,6 +47,7 @@ export interface ProductHub {
 
   // Media
   hero_image_id: string | null;
+  hero_image_external_url?: string | null;
   hero_image_url?: string | null;
   gallery_image_ids: string[];
   video_ids: string[];
@@ -122,7 +123,8 @@ export interface UpdateProductInput {
   product_line?: string;
   collections?: string[];
   tags?: string[];
-  hero_image_id?: string;
+  hero_image_id?: string | null;
+  hero_image_external_url?: string | null;
   brand_voice_notes?: string;
   target_audience?: string;
   key_benefits?: string[];

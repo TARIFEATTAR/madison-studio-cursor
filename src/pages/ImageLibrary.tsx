@@ -8,7 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
-  Filter,
   Grid3X3,
   LayoutGrid,
   X,
@@ -17,6 +16,9 @@ import {
   Eye,
   MoreVertical,
   Camera,
+  Package,
+  Tags,
+  Loader2,
 } from "lucide-react";
 import { MagicWand02 } from "@untitledui/icons";
 import { Button } from "@/components/ui/button";
@@ -37,6 +39,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { ImageEditorModal, type ImageEditorImage } from "@/components/image-editor/ImageEditorModal";
+import { ProductSelector } from "@/components/forge/ProductSelector";
+import { useProducts, type Product } from "@/hooks/useProducts";
+import {
+  addLibraryTag,
+  removeLibraryTag,
+  BACKGROUND_SCENE_TAG,
+  LIBRARY_ROLE_PRODUCT,
+  LIBRARY_ROLE_BACKGROUND_SCENE,
+  LIBRARY_ROLE_STYLE_REFERENCE,
+} from "@/lib/imageLibraryTags";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import "@/styles/darkroom.css";
 
 interface GeneratedImage {
@@ -48,13 +68,62 @@ interface GeneratedImage {
   aspect_ratio: string | null;
   final_prompt: string | null;
   library_category: string | null;
+  library_tags?: string[] | null;
   is_hero_image: boolean;
   created_at: string;
   is_archived: boolean;
 }
 
-type CategoryFilter = "all" | "product" | "lifestyle" | "ecommerce" | "social" | "editorial";
+type AssetTypeFilter =
+  | "all"
+  | "product"
+  | "background"
+  | "style"
+  | "roll-ons"
+  | "empty-plates";
 type SortOption = "recent" | "oldest" | "category";
+
+/** Pilot filter: Consistency / pipeline images tagged with roller-ball applicators. */
+function matchesRollOnLibraryScope(image: GeneratedImage): boolean {
+  const tags = image.library_tags ?? [];
+  return tags.some(
+    (t) =>
+      t === "applicator:roller-ball" ||
+      t === "applicator:roller-ball-plastic" ||
+      t.includes("roller-ball"),
+  );
+}
+
+function matchesStyleReferenceAsset(image: GeneratedImage): boolean {
+  const tags = image.library_tags ?? [];
+  return tags.includes(LIBRARY_ROLE_STYLE_REFERENCE) || image.goal_type === "style_reference";
+}
+
+function matchesBackgroundAsset(image: GeneratedImage): boolean {
+  const tags = image.library_tags ?? [];
+  return (
+    tags.includes(LIBRARY_ROLE_BACKGROUND_SCENE) ||
+    tags.includes(BACKGROUND_SCENE_TAG) ||
+    image.goal_type === "background_scene"
+  );
+}
+
+function matchesProductAsset(image: GeneratedImage): boolean {
+  if (matchesStyleReferenceAsset(image)) return false;
+  if (matchesBackgroundAsset(image)) return false;
+  const tags = image.library_tags ?? [];
+  if (tags.includes(LIBRARY_ROLE_PRODUCT)) return true;
+  const g = image.goal_type;
+  if (!g) return true;
+  if (g === "background_scene" || g === "style_reference") return false;
+  return true;
+}
+
+/** Dark Room “empty plate” generations — explicit kind tag on the row. */
+function matchesEmptyPlateScope(image: GeneratedImage): boolean {
+  const tags = image.library_tags ?? [];
+  return tags.includes(BACKGROUND_SCENE_TAG);
+}
 
 export default function ImageLibrary() {
   const navigate = useNavigate();
@@ -64,10 +133,23 @@ export default function ImageLibrary() {
 
   // State
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [sortBy, setSortBy] = useState<SortOption>("recent");
+  const [assetTypeFilter, setAssetTypeFilter] = useState<AssetTypeFilter>("all");
   const [viewMode, setViewMode] = useState<"grid" | "masonry">("grid");
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
+
+  const { updateProduct } = useProducts();
+
+  // Set Product Hub hero (thumbnail) from library image
+  const [heroAssignOpen, setHeroAssignOpen] = useState(false);
+  const [heroAssignImage, setHeroAssignImage] = useState<GeneratedImage | null>(null);
+  const [heroAssignProduct, setHeroAssignProduct] = useState<Product | null>(null);
+
+  // Edit durable library_tags (e.g. sku:… for Product Hub matching)
+  const [tagsEditOpen, setTagsEditOpen] = useState(false);
+  const [tagsEditImage, setTagsEditImage] = useState<GeneratedImage | null>(null);
+  const [newLibraryTag, setNewLibraryTag] = useState("");
+  const [tagActionLoading, setTagActionLoading] = useState(false);
 
   // Image editor modal
   const [imageEditorOpen, setImageEditorOpen] = useState(false);
@@ -134,15 +216,21 @@ export default function ImageLibrary() {
         (img) =>
           img.session_name?.toLowerCase().includes(query) ||
           img.final_prompt?.toLowerCase().includes(query) ||
-          img.library_category?.toLowerCase().includes(query)
+          img.library_category?.toLowerCase().includes(query) ||
+          (img.library_tags ?? []).some((t) => t.toLowerCase().includes(query))
       );
     }
 
-    // Filter by category (use goal_type for detailed categorization)
-    if (categoryFilter !== "all") {
-      result = result.filter((img) =>
-        img.goal_type?.toLowerCase().includes(categoryFilter)
-      );
+    if (assetTypeFilter === "roll-ons") {
+      result = result.filter(matchesRollOnLibraryScope);
+    } else if (assetTypeFilter === "empty-plates") {
+      result = result.filter(matchesEmptyPlateScope);
+    } else if (assetTypeFilter === "product") {
+      result = result.filter(matchesProductAsset);
+    } else if (assetTypeFilter === "background") {
+      result = result.filter(matchesBackgroundAsset);
+    } else if (assetTypeFilter === "style") {
+      result = result.filter(matchesStyleReferenceAsset);
     }
 
     // Sort
@@ -160,7 +248,7 @@ export default function ImageLibrary() {
     });
 
     return result;
-  }, [images, searchQuery, categoryFilter, sortBy]);
+  }, [images, searchQuery, assetTypeFilter, sortBy]);
 
   // Handlers
   const handleImageClick = (image: GeneratedImage) => {
@@ -239,6 +327,64 @@ export default function ImageLibrary() {
     });
   };
 
+  const openHeroAssign = (image: GeneratedImage) => {
+    setHeroAssignImage(image);
+    setHeroAssignProduct(null);
+    setHeroAssignOpen(true);
+  };
+
+  const openTagsEdit = (image: GeneratedImage) => {
+    setTagsEditImage(image);
+    setNewLibraryTag("");
+    setTagsEditOpen(true);
+  };
+
+  const handleConfirmHeroAssign = () => {
+    if (!heroAssignImage || !heroAssignProduct) return;
+    updateProduct.mutate(
+      {
+        id: heroAssignProduct.id,
+        hero_image_external_url: heroAssignImage.image_url,
+        hero_image_id: null,
+      },
+      {
+        onSuccess: () => {
+          setHeroAssignOpen(false);
+          setHeroAssignImage(null);
+          setHeroAssignProduct(null);
+        },
+      },
+    );
+  };
+
+  const handleAddLibraryTag = async () => {
+    const raw = newLibraryTag.trim();
+    if (!raw || !tagsEditImage) return;
+    setTagActionLoading(true);
+    const next = await addLibraryTag(tagsEditImage.id, raw);
+    setTagActionLoading(false);
+    if (next) {
+      setNewLibraryTag("");
+      setTagsEditImage((prev) => (prev ? { ...prev, library_tags: next } : null));
+      await refetch();
+    } else {
+      toast({ title: "Could not add tag", description: "Check your connection or permissions.", variant: "destructive" });
+    }
+  };
+
+  const handleRemoveLibraryTag = async (tag: string) => {
+    if (!tagsEditImage) return;
+    setTagActionLoading(true);
+    const next = await removeLibraryTag(tagsEditImage.id, tag);
+    setTagActionLoading(false);
+    if (next) {
+      setTagsEditImage((prev) => (prev ? { ...prev, library_tags: next } : null));
+      await refetch();
+    } else {
+      toast({ title: "Could not remove tag", variant: "destructive" });
+    }
+  };
+
   const getCategoryBadgeColor = (category: string | null) => {
     switch (category?.toLowerCase()) {
       case "product":
@@ -292,19 +438,19 @@ export default function ImageLibrary() {
 
           {/* Filters Row - Mobile: Stack, Desktop: Row */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
-            {/* Left: Category + Sort */}
+            {/* Left: Asset type + Sort */}
             <div className="flex items-center gap-2 flex-wrap">
-            <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as CategoryFilter)}>
-                <SelectTrigger className="w-full md:w-[150px] bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
-                <SelectValue placeholder="Category" />
+            <Select value={assetTypeFilter} onValueChange={(v) => setAssetTypeFilter(v as AssetTypeFilter)}>
+                <SelectTrigger className="w-full md:w-[180px] bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] text-sm">
+                <SelectValue placeholder="Asset type" />
               </SelectTrigger>
               <SelectContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)]">
-                <SelectItem value="all" className="text-[var(--darkroom-text)]">All Categories</SelectItem>
-                <SelectItem value="product" className="text-[var(--darkroom-text)]">Product</SelectItem>
-                <SelectItem value="lifestyle" className="text-[var(--darkroom-text)]">Lifestyle</SelectItem>
-                <SelectItem value="ecommerce" className="text-[var(--darkroom-text)]">E-commerce</SelectItem>
-                <SelectItem value="social" className="text-[var(--darkroom-text)]">Social</SelectItem>
-                <SelectItem value="editorial" className="text-[var(--darkroom-text)]">Editorial</SelectItem>
+                <SelectItem value="all" className="text-[var(--darkroom-text)]">All assets</SelectItem>
+                <SelectItem value="product" className="text-[var(--darkroom-text)]">Product images</SelectItem>
+                <SelectItem value="background" className="text-[var(--darkroom-text)]">Background scenes</SelectItem>
+                <SelectItem value="style" className="text-[var(--darkroom-text)]">Style references</SelectItem>
+                <SelectItem value="empty-plates" className="text-[var(--darkroom-text)]">Empty plates</SelectItem>
+                <SelectItem value="roll-ons" className="text-[var(--darkroom-text)]">Roll-ons (pilot)</SelectItem>
               </SelectContent>
             </Select>
 
@@ -389,8 +535,10 @@ export default function ImageLibrary() {
             <Camera className="w-12 h-12 md:w-16 md:h-16 text-[var(--darkroom-text)]/20 mb-4" />
             <h3 className="text-lg md:text-xl font-serif text-[var(--darkroom-text)] mb-2">No images yet</h3>
             <p className="text-sm md:text-base text-[var(--darkroom-text)]/60 mb-6 max-w-md">
-              {searchQuery || categoryFilter !== "all"
-                ? "No images match your filters. Try adjusting your search."
+              {searchQuery || assetTypeFilter !== "all"
+                ? assetTypeFilter === "empty-plates"
+                  ? "No empty plates match these filters. Turn on Background plate mode in Dark Room to create empty scenes, or widen your search."
+                  : "No images match your filters. Try adjusting your search or asset type."
                 : "Start creating stunning product images in the Dark Room."}
             </p>
             <Button
@@ -495,6 +643,26 @@ export default function ImageLibrary() {
                           <DropdownMenuItem
                             onClick={(e) => {
                               e.stopPropagation();
+                              openHeroAssign(image);
+                            }}
+                            className="text-[var(--darkroom-text)] focus:bg-[var(--darkroom-border)]"
+                          >
+                            <Package className="w-4 h-4 mr-2" />
+                            Set Product Hub thumbnail
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openTagsEdit(image);
+                            }}
+                            className="text-[var(--darkroom-text)] focus:bg-[var(--darkroom-border)]"
+                          >
+                            <Tags className="w-4 h-4 mr-2" />
+                            Edit library tags
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
                               handleArchive(image.id);
                             }}
                             className="text-red-400 focus:bg-[var(--darkroom-border)]"
@@ -507,8 +675,8 @@ export default function ImageLibrary() {
                     </div>
 
                     {/* Category Badge - use goal_type for display */}
+                    <div className="absolute bottom-2 left-2 right-2 flex flex-wrap gap-1 items-end">
                     {image.goal_type && (
-                      <div className="absolute bottom-2 left-2">
                         <Badge
                           variant="outline"
                           className={cn(
@@ -518,8 +686,21 @@ export default function ImageLibrary() {
                         >
                           {image.goal_type.replace(/_/g, ' ')}
                         </Badge>
-                      </div>
                     )}
+                    {(image.library_tags ?? [])
+                      .filter((t) => t.startsWith("sku:"))
+                      .slice(0, 2)
+                      .map((t) => (
+                        <Badge
+                          key={t}
+                          variant="outline"
+                          className="text-[10px] border-[var(--darkroom-accent)]/40 text-[var(--darkroom-accent)] max-w-[120px] truncate"
+                          title={t}
+                        >
+                          {t.replace(/^sku:/, "")}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -527,6 +708,149 @@ export default function ImageLibrary() {
           </div>
         )}
       </div>
+
+      <Dialog
+        open={heroAssignOpen}
+        onOpenChange={(open) => {
+          setHeroAssignOpen(open);
+          if (!open) {
+            setHeroAssignImage(null);
+            setHeroAssignProduct(null);
+          }
+        }}
+      >
+        <DialogContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] max-w-md">
+          <DialogHeader>
+            <DialogTitle>Set Product Hub thumbnail</DialogTitle>
+            <DialogDescription className="text-[var(--darkroom-text)]/70">
+              Uses this library image as the product hero (external URL). Any DAM hero link on that product is cleared so the grid thumbnail matches your pick.
+            </DialogDescription>
+          </DialogHeader>
+          {heroAssignImage && (
+            <div className="flex gap-3 items-center">
+              <img
+                src={heroAssignImage.image_url}
+                alt=""
+                className="w-20 h-20 rounded-md object-cover border border-[var(--darkroom-border)] shrink-0"
+              />
+              <p className="text-xs text-[var(--darkroom-text)]/60 line-clamp-4">
+                {(heroAssignImage.library_tags ?? []).length > 0
+                  ? (heroAssignImage.library_tags ?? []).join(" · ")
+                  : "No library tags yet — add sku:… in Edit library tags to track this render."}
+              </p>
+            </div>
+          )}
+          <div className="space-y-2">
+            <ProductSelector
+              value={heroAssignProduct?.name ?? ""}
+              onSelect={setHeroAssignProduct}
+              showLabel={false}
+              buttonClassName="w-full justify-between bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] text-[var(--darkroom-text)]"
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              className="border-[var(--darkroom-border)] text-[var(--darkroom-text)]"
+              onClick={() => {
+                setHeroAssignOpen(false);
+                setHeroAssignImage(null);
+                setHeroAssignProduct(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="bg-[var(--darkroom-accent)] hover:bg-[var(--darkroom-accent-hover)] text-[var(--darkroom-bg)]"
+              disabled={!heroAssignProduct || updateProduct.isPending}
+              onClick={handleConfirmHeroAssign}
+            >
+              {updateProduct.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving…
+                </>
+              ) : (
+                "Apply thumbnail"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={tagsEditOpen}
+        onOpenChange={(open) => {
+          setTagsEditOpen(open);
+          if (!open) {
+            setTagsEditImage(null);
+            setNewLibraryTag("");
+          }
+        }}
+      >
+        <DialogContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] max-w-md">
+          <DialogHeader>
+            <DialogTitle>Library tags</DialogTitle>
+            <DialogDescription className="text-[var(--darkroom-text)]/70">
+              Tag renders with{" "}
+              <span className="font-mono text-[var(--darkroom-accent)]">sku:…</span> so you can
+              search them and line them up with Product Hub SKUs. Pipeline and Consistency runs
+              already add applicator and shape tags.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-wrap gap-2 min-h-[40px]">
+            {(tagsEditImage?.library_tags ?? []).length === 0 ? (
+              <span className="text-sm text-[var(--darkroom-text)]/50">No tags yet</span>
+            ) : (
+              (tagsEditImage?.library_tags ?? []).map((t) => (
+                <Badge
+                  key={t}
+                  variant="outline"
+                  className="text-xs gap-1 pr-1 border-[var(--darkroom-border)] text-[var(--darkroom-text)]"
+                >
+                  <span className="max-w-[200px] truncate" title={t}>
+                    {t}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={tagActionLoading}
+                    className="rounded p-0.5 hover:bg-[var(--darkroom-border)] disabled:opacity-50"
+                    onClick={() => void handleRemoveLibraryTag(t)}
+                    aria-label={`Remove tag ${t}`}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              ))
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              value={newLibraryTag}
+              onChange={(e) => setNewLibraryTag(e.target.value)}
+              placeholder="e.g. sku:ROLL-ON-9ML-CLEAR"
+              className="flex-1 bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)]"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  void handleAddLibraryTag();
+                }
+              }}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              className="shrink-0"
+              disabled={!newLibraryTag.trim() || tagActionLoading}
+              onClick={() => void handleAddLibraryTag()}
+            >
+              {tagActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Image Editor Modal */}
       <ImageEditorModal

@@ -391,7 +391,7 @@
 .upload-zone {
   position: relative;
   width: 100%;
-  height: 140px;
+  min-height: 248px;
   border: 1px solid var(--darkroom-border);
   border-radius: var(--radius-md);
   background: var(--camera-body-deep);
@@ -481,6 +481,7 @@
   border-color: var(--led-ready);
   border-width: 1px;
   padding: var(--space-sm);
+  min-height: 0;
   height: auto;
   box-shadow: 
     inset 0 2px 8px rgba(0, 0, 0, 0.4),
@@ -522,20 +523,25 @@
 .upload-zone__content,
 .upload-empty {
   text-align: center;
-  padding: var(--space-lg);
+  padding: var(--space-xl) var(--space-lg) calc(var(--space-xl) + 2px);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-sm);
+  justify-content: center;
+  gap: var(--space-md);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .upload-zone__icon,
 .upload-icon {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   color: var(--darkroom-accent);
-  margin: 0 auto var(--space-md);
-  opacity: 0.7;
+  margin: 0 auto;
+  opacity: 0.85;
+  flex-shrink: 0;
   transition: all var(--duration-fast) var(--ease-out);
 }
 
@@ -547,16 +553,23 @@
 
 .upload-zone__label,
 .upload-text {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
   color: var(--darkroom-text);
-  margin-bottom: var(--space-xs);
+  margin: 0;
+  max-width: 18rem;
 }
 
 .upload-zone__description,
 .upload-description {
-  font-size: 12px;
-  color: var(--darkroom-text-muted);
+  font-size: 13px;
+  line-height: 1.55;
+  font-weight: 500;
+  color: rgba(232, 230, 227, 0.82);
+  margin: 0;
+  max-width: 19rem;
 }
 
 /* Filled State */
@@ -1311,12 +1324,6 @@
 
 .mobile-darkroom__fullscreen-action--delete:active {
   background: rgba(239, 68, 68, 0.1);
-}
-
-.upload-zone-help {
-  font-size: 11px;
-  color: var(--darkroom-text-muted);
-  margin-top: var(--space-xs);
 }
 
 /* Add Upload Button */
@@ -4824,20 +4831,27 @@
   }
 
   .mobile-inputs-sheet .upload-zone {
-    height: 100px;
+    min-height: 200px;
+    height: auto;
+  }
+
+  .mobile-inputs-sheet .upload-zone.has-image {
+    min-height: 0;
   }
 
   .mobile-inputs-sheet .upload-icon {
-    width: 20px;
-    height: 20px;
+    width: 32px;
+    height: 32px;
   }
 
   .mobile-inputs-sheet .upload-text {
-    font-size: 11px;
+    font-size: 14px;
+    font-weight: 600;
   }
 
   .mobile-inputs-sheet .upload-description {
-    font-size: 9px;
+    font-size: 12px;
+    color: rgba(232, 230, 227, 0.82);
   }
   
   .mobile-inputs-sheet .upload-zone-wrapper {
