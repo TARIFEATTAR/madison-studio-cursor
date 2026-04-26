@@ -33,6 +33,21 @@ import {
   DEFAULT_IMAGE_PRESET_ID,
   IMAGE_PRESET_LIST,
 } from "@/config/imagePresets";
+import {
+  BACKGROUND_PRESETS,
+  getRandomBackgroundVariation,
+} from "@/components/darkroom/RightPanel";
+
+const SCENE_FLEXIBLE_PRESET_ID = "master-scene-flexible-2000x2200";
+
+const ASPECT_RATIO_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: "10:11", label: "10:11 portrait (catalog default)" },
+  { value: "1:1", label: "1:1 square (marketplace)" },
+  { value: "4:5", label: "4:5 portrait (Sanity hero)" },
+  { value: "3:2", label: "3:2 landscape" },
+  { value: "16:9", label: "16:9 landscape (hero)" },
+  { value: "21:9", label: "21:9 ultrawide (banner)" },
+];
 
 // Masters tab generates full catalog scenes (bottle + fitment + cap), so the
 // paper-doll transparent-layer preset doesn't belong here — pairing it with a
@@ -48,6 +63,7 @@ import {
 import type { Product } from "@/integrations/convex/bestBottles";
 import {
   useAssembledPromptGeneration,
+  type AssembledGenerateOptions,
   type AssembledGenerationResult,
 } from "@/hooks/useAssembledPromptGeneration";
 
@@ -137,6 +153,17 @@ export function MastersTabPanel({
   const [liquidFill, setLiquidFill] = useState(75);
   const [showAssembledPrompt, setShowAssembledPrompt] = useState(false);
   const [assembledCache, setAssembledCache] = useState<AssembledPrompt | null>(null);
+
+  // Scene overlay — only used when the Master · Scene-Flexible preset is
+  // selected. The chip picker pre-fills the textarea with one of the
+  // BACKGROUND_PRESETS' curated variations; the operator can then edit
+  // the text freely. Aspect ratio + resolution let them pivot a 10:11
+  // master into a 16:9 hero or 1:1 marketplace tile per generation.
+  const [sceneBackgroundPresetId, setSceneBackgroundPresetId] = useState<string | null>(null);
+  const [sceneBackgroundPrompt, setSceneBackgroundPrompt] = useState("");
+  const [sceneAspectRatio, setSceneAspectRatio] = useState<string>("10:11");
+  const [sceneResolution, setSceneResolution] = useState<"standard" | "high">("standard");
+  const isSceneFlexible = presetId === SCENE_FLEXIBLE_PRESET_ID;
 
   // Manual reference image override — bypasses Convex's legacy .gif imageUrl
   // (which OpenAI /edits rejects). Drop a PSD-rendered PNG here to anchor
@@ -473,6 +500,36 @@ export function MastersTabPanel({
       ? { present: true, color: liquidColor, fillPercent: liquidFill }
       : null;
     const assembled = assemblePrompt({ presetId, sku, liquid });
+
+    // Build scene overlay only when the scene-flexible preset is active.
+    // The chip's curated variation gets randomized at submit-time so two
+    // back-to-back generations with the same chip yield different scenes.
+    let sceneOverlay: AssembledGenerateOptions["sceneOverlay"];
+    let sceneTags: string[] = [];
+    if (isSceneFlexible) {
+      const chipVariation = sceneBackgroundPresetId
+        ? getRandomBackgroundVariation(sceneBackgroundPresetId)
+        : null;
+      // Operator-typed text takes precedence over the chip's variation;
+      // chip is the quick-start, textarea is the override.
+      const finalBackgroundPrompt =
+        sceneBackgroundPrompt.trim().length > 0
+          ? sceneBackgroundPrompt.trim()
+          : chipVariation;
+      sceneOverlay = {
+        backgroundPresetId: sceneBackgroundPresetId,
+        backgroundPrompt: finalBackgroundPrompt,
+        aspectRatioOverride: sceneAspectRatio,
+        resolutionOverride: sceneResolution,
+      };
+      sceneTags = [
+        "scene-flexible",
+        sceneBackgroundPresetId ? `bg:${sceneBackgroundPresetId}` : null,
+        `aspect:${sceneAspectRatio}`,
+        `res:${sceneResolution}`,
+      ].filter((t): t is string => Boolean(t));
+    }
+
     return generate(assembled, {
       // Custom upload (PSD-rendered PNG) takes priority over Convex's
       // legacy .gif imageUrl — the latter is silently dropped by the
@@ -483,6 +540,7 @@ export function MastersTabPanel({
         collection: sku.bottleCollection ?? undefined,
         category: sku.category,
       },
+      sceneOverlay,
       // Human-readable identifiers live on library tags. sessionId is a uuid
       // column in Postgres — don't pass a string here.
       extraLibraryTags: [
@@ -490,6 +548,7 @@ export function MastersTabPanel({
         "studio-master",
         familyName ? `family:${familyName.toLowerCase().replace(/\s+/g, "-")}` : null,
         `sku:${sku.graceSku}`,
+        ...sceneTags,
       ].filter((t): t is string => Boolean(t)),
     });
   };
@@ -647,6 +706,106 @@ export function MastersTabPanel({
           </div>
         )}
       </div>
+
+      {/* SCENE OVERLAY — only renders when the Master · Scene-Flexible preset
+          is selected. Background chip is the quick-start, textarea is the
+          fine-tune override. Aspect ratio + resolution let one master
+          generate as a hero, marketplace tile, or banner without leaving
+          this panel. Catalog presets stay locked at 10:11 / standard. */}
+      {isSceneFlexible && (
+        <div className="space-y-3 pt-1 border-t" style={{ borderColor: "var(--darkroom-border-subtle)" }}>
+          <div className="pt-2 space-y-1">
+            <Label className="text-xs uppercase tracking-wider" style={{ color: "var(--darkroom-text-dim)" }}>
+              Scene overlay
+            </Label>
+            <p className="text-[10px]" style={{ color: "var(--darkroom-text-dim)" }}>
+              The bottle stays locked to the reference + product spec. Pick a background, override
+              aspect ratio, or bump resolution per generation.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-[11px]" style={{ color: "var(--darkroom-text-dim)" }}>
+              Background chip
+            </Label>
+            <div className="flex flex-wrap gap-1.5">
+              {BACKGROUND_PRESETS.map((bg) => {
+                const selected = sceneBackgroundPresetId === bg.id;
+                return (
+                  <button
+                    key={bg.id}
+                    type="button"
+                    onClick={() => setSceneBackgroundPresetId(selected ? null : bg.id)}
+                    className="px-2 py-1 rounded border text-[11px] transition-colors"
+                    style={{
+                      borderColor: selected ? "var(--darkroom-accent)" : "rgba(255,255,255,0.12)",
+                      background: selected ? "rgba(184, 149, 106, 0.12)" : "rgba(255,255,255,0.02)",
+                      color: selected ? "var(--darkroom-accent)" : "var(--darkroom-text-dim)",
+                    }}
+                    title={bg.description}
+                  >
+                    <span className="mr-1">{bg.icon}</span>
+                    {bg.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-[11px]" style={{ color: "var(--darkroom-text-dim)" }}>
+              Custom scene (overrides chip)
+            </Label>
+            <Textarea
+              value={sceneBackgroundPrompt}
+              onChange={(e) => setSceneBackgroundPrompt(e.target.value)}
+              placeholder="e.g. natural travertine surface, soft morning daylight from a north-facing window, gentle bounce-fill from cream walls"
+              className="min-h-[60px] text-xs bg-white/[0.03] border-white/10 text-white"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-[11px]" style={{ color: "var(--darkroom-text-dim)" }}>
+                Aspect ratio
+              </Label>
+              <Select value={sceneAspectRatio} onValueChange={setSceneAspectRatio}>
+                <SelectTrigger className="h-8 text-[11px] bg-white/[0.03] border-white/10 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ASPECT_RATIO_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value} className="text-[11px]">
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px]" style={{ color: "var(--darkroom-text-dim)" }}>
+                Resolution
+              </Label>
+              <Select
+                value={sceneResolution}
+                onValueChange={(v) => setSceneResolution(v as "standard" | "high")}
+              >
+                <SelectTrigger className="h-8 text-[11px] bg-white/[0.03] border-white/10 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="standard" className="text-[11px]">
+                    Standard (1024 × 1024)
+                  </SelectItem>
+                  <SelectItem value="high" className="text-[11px]">
+                    High (1536 × 1024)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* REFERENCE FOLDER — drop a folder of assembled-bottle PNGs once per
           family. Each PNG is uploaded to Supabase Storage and classified by

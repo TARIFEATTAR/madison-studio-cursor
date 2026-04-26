@@ -48,6 +48,20 @@ export interface AssembledGenerateOptions {
    * If omitted a fresh uuid is minted per call.
    */
   sessionId?: string;
+  /**
+   * Scene overlay — used by the Master · Scene-Flexible preset so the
+   * operator can swap the background, framing aspect, and resolution
+   * without editing the prompt. The edge function (Director Mode) appends
+   * `BACKGROUND STYLE: <backgroundPrompt>` to the prompt and uses
+   * `aspectRatio` / `resolution` directly. The strict catalog presets
+   * leave these undefined to keep their canonical 10:11 / standard output.
+   */
+  sceneOverlay?: {
+    backgroundPresetId?: string | null;
+    backgroundPrompt?: string | null;
+    aspectRatioOverride?: string | null;
+    resolutionOverride?: "standard" | "high" | null;
+  };
 }
 
 export function useAssembledPromptGeneration() {
@@ -135,12 +149,25 @@ export function useAssembledPromptGeneration() {
             organizationId: currentOrganizationId,
             sessionId,
             goalType: "product_photography",
-            aspectRatio: assembled.preset.aspectRatio,
+            // Scene-Flexible preset can override aspect ratio per generation
+            // so a 16:9 hero or 1:1 marketplace tile still uses the same
+            // SKU lock-in. Default falls through to the preset's canonical
+            // ratio (10:11 for Grid Card, 4:5 for Sanity Hero, etc.).
+            aspectRatio:
+              options.sceneOverlay?.aspectRatioOverride ?? assembled.preset.aspectRatio,
             outputFormat: "png",
             referenceImages,
             proModeControls,
             aiProvider: DEFAULT_IMAGE_AI_PROVIDER,
-            resolution: "standard",
+            // Resolution override is locked to standard|high — "4k" via
+            // Gemini fallback OOMs the worker (see generate-madison-image
+            // memory ceiling).
+            resolution: options.sceneOverlay?.resolutionOverride ?? "standard",
+            // Background overlay flows through the same fields Dark Room
+            // uses; the edge function's Director Mode appends them as a
+            // BACKGROUND STYLE block ahead of the bottle's product spec.
+            backgroundPresetId: options.sceneOverlay?.backgroundPresetId ?? undefined,
+            backgroundPrompt: options.sceneOverlay?.backgroundPrompt ?? undefined,
             extraLibraryTags,
             productContext: options.productContext,
           },

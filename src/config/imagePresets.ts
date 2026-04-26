@@ -336,6 +336,48 @@ export const GRID_CARD_EXPLODED_2000X2200: ImagePreset = {
     "; no cap lying on its side, no tilted cap, no cap inverted (opening-up), no cap floating; no merged single shadow under both objects (each gets its own contact shadow); no third object in the frame",
 };
 
+/**
+ * Scene-flexible variant of the Grid Card. Same canvas + same product spec
+ * pipeline + same MANDATORY DIMENSIONS, but the parchment background and
+ * surface-texture negatives are deliberately omitted so the operator can
+ * supply a custom scene (natural stone, warm wood, dramatic shadow play,
+ * etc.) without fighting the prompt.
+ *
+ * Lifestyle / hero / scene-variant generations live here — the strict
+ * `GRID_CARD_2000X2200` stays the canonical catalog tile. The Masters tab
+ * surfaces a Background Chip + free-form scene textarea + aspect-ratio +
+ * resolution overlay UI when this preset is selected; those fields feed
+ * the same edge-function fields Dark Room uses, so the scene comes through
+ * as Director-Mode `BACKGROUND STYLE` language without colliding with the
+ * preset's bottle-anchored block.
+ */
+export const MASTER_SCENE_FLEXIBLE_2000X2200: ImagePreset = {
+  id: "master-scene-flexible-2000x2200",
+  label: "Master · Scene-Flexible · 2000 × 2200",
+  purpose:
+    "Lifestyle / hero variants of an approved master. Preserves the canonical bottle (reference + product spec + physical constraints) while letting the operator swap the background, lighting environment, and aspect ratio per generation.",
+  kind: "final_render",
+  canvas: { widthPx: 2000, heightPx: 2200 },
+  aspectRatio: "10:11",
+  orientation: "portrait",
+  backgroundHex: "#FFFFFF",
+  backgroundDescription:
+    "background and surface dictated by the operator's scene overlay below — see BACKGROUND STYLE block",
+  lightingLanguage:
+    "lighting realistic and consistent with the operator's scene; soft directional key with believable bounce-fill matching the scene's environment; broken specular highlights along the bottle's shoulder and curves — never one wide CGI stripe; one subtle specular kicker on glass edges; Hasselblad-grade color accuracy, neutral white balance",
+  shadowLanguage:
+    "soft contact shadow whose direction is dictated by the scene's key light (typically BACK-RIGHT for upper-front-left key); 25–30% opacity at the densest point closest to the bottle base, fading to ~5% at the tip; soft penumbra throughout; no overhead-flat shadow directly beneath the bottle, no dramatic long cast, no double shadow, no harsh edge",
+  compositionLanguage: framingLanguage([60, 70]),
+  qualityLanguage:
+    "photo-realistic editorial luxury product photography; the subject is the Best Bottles glass bottle from the reference image — do not invent or substitute product designs from the scene's environment; enhanced glass clarity with realistic refraction; believable base thickness visible through the bottom of the glass; crisp readable neck threads where exposed; faint mould seam and subtle tooling marks at the base allowed — real pressed-glass micro-imperfections, not CGI-perfect",
+  // The standard Grid Card preset bans surface texture / stone / wood /
+  // fabric / horizon line. Those are exactly the things the scene overlay
+  // is designed to add, so we drop them here. Everything else from the
+  // shared negative list still applies.
+  negativeLanguage:
+    "no label, no text, no badge, no watermark, no brand name, no secondary product, no hands, no spray mist; no chrome-CGI sheen on plastic caps; no transparent or checkerboard background; no broad central reflection stripe on the glass body; no shadow cast to the left or back-left; no cool/blue light unless the scene overlay calls for it, no daylight-noon flat lighting unless explicit, no rim light, no backlight haze; no Aesop bottles, no Aesop labels, no Aesop product silhouettes; no Kinfolk magazine page chrome; no other brand's bottle shapes — the subject is the Best Bottles bottle from the reference image only",
+};
+
 export const SQUARE_MARKETPLACE_1800X1800: ImagePreset = {
   id: "square-marketplace-1800x1800",
   label: "Square Marketplace · 1800 × 1800",
@@ -357,6 +399,7 @@ export const SQUARE_MARKETPLACE_1800X1800: ImagePreset = {
 export const IMAGE_PRESETS: Record<string, ImagePreset> = {
   [GRID_CARD_2000X2200.id]: GRID_CARD_2000X2200,
   [GRID_CARD_EXPLODED_2000X2200.id]: GRID_CARD_EXPLODED_2000X2200,
+  [MASTER_SCENE_FLEXIBLE_2000X2200.id]: MASTER_SCENE_FLEXIBLE_2000X2200,
   [SANITY_HERO_928X1152.id]: SANITY_HERO_928X1152,
   [PAPER_DOLL_COMPONENT_1000X1300.id]: PAPER_DOLL_COMPONENT_1000X1300,
   [PAPER_DOLL_COMPONENT_1500X1300.id]: PAPER_DOLL_COMPONENT_1500X1300,
@@ -367,6 +410,7 @@ export const IMAGE_PRESETS: Record<string, ImagePreset> = {
 export const IMAGE_PRESET_LIST: ImagePreset[] = [
   GRID_CARD_2000X2200,
   GRID_CARD_EXPLODED_2000X2200,
+  MASTER_SCENE_FLEXIBLE_2000X2200,
   SANITY_HERO_928X1152,
   PAPER_DOLL_COMPONENT_1000X1300,
   PAPER_DOLL_COMPONENT_1500X1300,
