@@ -103,6 +103,13 @@ function folderKey(graceSku: string, modifier?: string): string {
 interface MastersTabPanelProps {
   /** Selected variant from the Studio's left rail. */
   selectedProduct: Product | null;
+  /**
+   * Every SKU in the current family + capacity + color cohort, used by the
+   * "Generate all matched" button to iterate without forcing the operator
+   * to click each SKU one at a time. Optional — falls back to single-SKU
+   * generation if the parent doesn't pass it.
+   */
+  familyVariants?: Product[];
   /** Family name for Library tagging. */
   familyName?: string | null;
   /** Optional callback when a master is approved. Parent can persist. */
@@ -111,6 +118,7 @@ interface MastersTabPanelProps {
 
 export function MastersTabPanel({
   selectedProduct,
+  familyVariants,
   familyName,
   onApproveMaster,
 }: MastersTabPanelProps) {
@@ -381,20 +389,25 @@ export function MastersTabPanel({
     return assembled;
   };
 
-  const handleGenerate = async () => {
-    if (!selectedProduct) return;
-    const assembled = handleAssemble();
-    if (!assembled) return;
-
-    await generate(assembled, {
+  /**
+   * Single-SKU prompt + reference + tags assembly. Factored out so the
+   * batch-generate loop can fire the same payload shape per variant
+   * without duplicating logic.
+   */
+  const generateOne = async (sku: Product, referenceUrl: string | null) => {
+    const liquid: LiquidSpec | null = liquidEnabled
+      ? { present: true, color: liquidColor, fillPercent: liquidFill }
+      : null;
+    const assembled = assemblePrompt({ presetId, sku, liquid });
+    return generate(assembled, {
       // Custom upload (PSD-rendered PNG) takes priority over Convex's
       // legacy .gif imageUrl — the latter is silently dropped by the
       // unsupported-format filter in useAssembledPromptGeneration.
-      referenceImageUrl: customReference?.url ?? selectedProduct.imageUrl,
+      referenceImageUrl: referenceUrl ?? sku.imageUrl,
       productContext: {
-        name: selectedProduct.itemName,
-        collection: selectedProduct.bottleCollection ?? undefined,
-        category: selectedProduct.category,
+        name: sku.itemName,
+        collection: sku.bottleCollection ?? undefined,
+        category: sku.category,
       },
       // Human-readable identifiers live on library tags. sessionId is a uuid
       // column in Postgres — don't pass a string here.
@@ -402,8 +415,74 @@ export function MastersTabPanel({
         "brand:best-bottles",
         "studio-master",
         familyName ? `family:${familyName.toLowerCase().replace(/\s+/g, "-")}` : null,
-        `sku:${selectedProduct.graceSku}`,
+        `sku:${sku.graceSku}`,
       ].filter((t): t is string => Boolean(t)),
+    });
+  };
+
+  const handleGenerate = async () => {
+    if (!selectedProduct) return;
+    handleAssemble(); // populate assembledCache for the prompt-preview button
+    await generateOne(selectedProduct, customReference?.url ?? null);
+  };
+
+  /**
+   * Batch progress state — null when idle, otherwise tracks the loop's
+   * current iteration so the UI can show "Generating X of Y · <SKU>".
+   * Failures per-SKU don't abort the loop; they're collected and surfaced
+   * in the toast at the end.
+   */
+  const [batchProgress, setBatchProgress] = useState<{
+    current: number;
+    total: number;
+    currentSku: string;
+    failures: Array<{ graceSku: string; error: string }>;
+  } | null>(null);
+
+  /** Every variant in the family that has a folder reference for the current preset. */
+  const matchedFamilyVariants = useMemo(() => {
+    if (!familyVariants || referenceFolder.size === 0) return [];
+    return familyVariants.filter((v) => lookupFolderReference(v, presetId) !== null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [familyVariants, referenceFolder, presetId]);
+
+  /**
+   * Batch-generate masters for every SKU in the family that has a folder
+   * reference. Sequential rather than parallel so we don't hammer the
+   * generate-madison-image edge function or OpenAI rate limits, and so
+   * the operator can watch each output land in the result panel.
+   */
+  const handleGenerateAll = async () => {
+    if (matchedFamilyVariants.length === 0) return;
+    const failures: Array<{ graceSku: string; error: string }> = [];
+    for (let i = 0; i < matchedFamilyVariants.length; i++) {
+      const sku = matchedFamilyVariants[i];
+      const ref = lookupFolderReference(sku, presetId);
+      setBatchProgress({
+        current: i + 1,
+        total: matchedFamilyVariants.length,
+        currentSku: sku.graceSku,
+        failures,
+      });
+      try {
+        const result = await generateOne(sku, ref?.url ?? null);
+        if (!result) {
+          failures.push({ graceSku: sku.graceSku, error: "Generation returned no result" });
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        failures.push({ graceSku: sku.graceSku, error: msg });
+      }
+    }
+    setBatchProgress(null);
+    const okCount = matchedFamilyVariants.length - failures.length;
+    toast({
+      title: failures.length > 0 ? "Batch finished with errors" : "Batch complete",
+      description:
+        failures.length > 0
+          ? `${okCount} succeeded · ${failures.length} failed (${failures.map((f) => f.graceSku).join(", ")})`
+          : `Generated ${okCount} masters. Review and approve in the Library.`,
+      variant: failures.length > 0 ? "destructive" : "default",
     });
   };
 
@@ -719,10 +798,56 @@ export function MastersTabPanel({
         </div>
       )}
 
+      {batchProgress && (
+        <div
+          className="rounded border p-2 flex items-start gap-2"
+          style={{
+            borderColor: "var(--darkroom-accent)",
+            background: "rgba(184, 149, 106, 0.08)",
+            color: "var(--darkroom-text)",
+          }}
+        >
+          <Loader2 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 animate-spin" style={{ color: "var(--darkroom-accent)" }} />
+          <div className="text-[11px] leading-snug flex-1">
+            <div className="font-medium">
+              Batch generating {batchProgress.current} of {batchProgress.total}
+            </div>
+            <div className="opacity-80 font-mono">{batchProgress.currentSku}</div>
+            {batchProgress.failures.length > 0 && (
+              <div className="opacity-80 mt-1" style={{ color: "#F87171" }}>
+                {batchProgress.failures.length} failed so far
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {familyVariants && referenceFolder.size > 0 && matchedFamilyVariants.length > 1 && (
+        <Button
+          onClick={handleGenerateAll}
+          disabled={isGenerating || batchProgress !== null}
+          variant="outline"
+          className="w-full border-white/15 bg-white/[0.02] text-white hover:bg-white/[0.06] hover:text-white"
+          title={`Generate masters for every SKU in this family that has a matched reference (${matchedFamilyVariants.length} variants).`}
+        >
+          {batchProgress ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Generating batch…
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4 mr-2" />
+              Generate all matched ({matchedFamilyVariants.length})
+            </>
+          )}
+        </Button>
+      )}
+
       <div className="flex gap-2">
         <Button
           onClick={handleGenerate}
-          disabled={isGenerating}
+          disabled={isGenerating || batchProgress !== null}
           className="flex-1 bg-[var(--darkroom-accent,#B8956A)] text-black hover:bg-[var(--darkroom-accent,#B8956A)]/90"
         >
           {isGenerating ? (
