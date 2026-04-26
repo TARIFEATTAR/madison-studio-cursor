@@ -14,6 +14,7 @@
  */
 
 import {
+  applicatorFramingOverride,
   buildPresetBlock,
   getImagePreset,
   type ImagePreset,
@@ -294,7 +295,12 @@ export function assemblePrompt(input: AssemblePromptInput): AssembledPrompt {
   }
 
   // FULL SCENE — keep the 4-layer assembly for masters / hero / grid tiles.
-  const presetBlock = buildPresetBlock(preset);
+  // Applicator-aware framing override: tassel / bulb / stopper SKUs need a
+  // smaller body fill so the assembly doesn't get cropped at the canvas
+  // edge. Falls back to the preset's default for plain caps.
+  const compositionOverride =
+    applicatorFramingOverride(input.sku.applicator) ?? undefined;
+  const presetBlock = buildPresetBlock(preset, { compositionOverride });
   const skuBlock = buildProductSpecBlock(input.sku, {
     componentScope: input.componentScope,
   });

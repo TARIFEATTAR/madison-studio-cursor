@@ -82,6 +82,58 @@ function framingLanguage(productHeightPercent: [number, number]): string {
   );
 }
 
+/**
+ * Per-applicator framing override. Plain bottles can fill 72–78% of canvas
+ * height comfortably, but applicators that extend BEYOND the bottle body
+ * (atomizer bulb above, tassel hanging down-left) need a smaller body fill
+ * so the full assembly stays inside the frame. Without this override the
+ * model honors the 72–78% rule and crops the tassel at the bottom edge.
+ *
+ * Returns null when the applicator doesn't extend the assembly beyond the
+ * bottle body (caller should fall back to the preset's default).
+ */
+export function applicatorFramingOverride(
+  applicator: string | null | undefined,
+): string | null {
+  if (!applicator) return null;
+  const a = applicator.toLowerCase();
+
+  // Tassel SKUs: bulb above + tassel hanging down-left. The assembly
+  // extends in BOTH directions, so the bottle body has to sit smaller in
+  // the canvas with extra padding top + bottom-left.
+  if (a.includes("tassel")) {
+    return (
+      `product perfectly centered horizontally; the BOTTLE BODY ALONE fills approximately 50–58% of the vertical canvas height ` +
+      `(NOT 72–78% — the assembly extends both above and below the body and the full assembly must remain inside the frame); ` +
+      `the atomizer BULB extends UP-LEFT from the neck and the TASSEL hangs DOWN-LEFT below the bottle base; ` +
+      `MANDATORY: the entire tassel — including its full hanging length and decorative end — must be fully visible inside the frame, never cropped at the bottom or left edge; ` +
+      `MANDATORY: the entire atomizer bulb must be fully visible inside the frame, never cropped at the top or left edge; ` +
+      `add generous padding top, bottom, and left so neither extreme touches the canvas edge`
+    );
+  }
+
+  // Bulb-only (no tassel): atomizer extends UP-LEFT from the neck.
+  if (a.includes("bulb sprayer") || a.includes("bulb spray") || a.includes("antique bulb")) {
+    return (
+      `product perfectly centered horizontally; the BOTTLE BODY ALONE fills approximately 60–66% of the vertical canvas height ` +
+      `(NOT 72–78% — the atomizer bulb extends above the bottle and must remain fully inside the frame); ` +
+      `the atomizer BULB extends UP-LEFT from the neck — its entire form, including the squeeze ball and any collar/connector, must be fully visible inside the frame, never cropped at the top or left edge; ` +
+      `add generous padding top and left so the bulb does not touch the canvas edge; base resting at the canonical anchor line with a natural contact shadow`
+    );
+  }
+
+  // Glass stopper: cap extends UP from the neck more than typical caps.
+  if (a.includes("stopper")) {
+    return (
+      `product perfectly centered horizontally; the BOTTLE BODY ALONE fills approximately 62–68% of the vertical canvas height; ` +
+      `the GLASS STOPPER extends straight up from the neck — its full ornamental height must be fully visible inside the frame, never cropped at the top edge; ` +
+      `add generous padding above the stopper so it does not touch the top canvas edge; base resting at the canonical anchor line with a natural contact shadow`
+    );
+  }
+
+  return null;
+}
+
 export const GRID_CARD_2000X2200: ImagePreset = {
   id: "grid-card-2000x2200",
   label: "Grid Card · 2000 × 2200",
@@ -358,14 +410,23 @@ export function getImagePreset(id: string): ImagePreset {
 /**
  * Returns the `[PRESET]` layer of the 4-layer prompt assembly as one
  * labeled block, ready to concatenate with GLOBAL / SKU / CHIPS / CONSTRAINTS.
+ *
+ * `compositionOverride` lets the caller swap in applicator-aware framing
+ * (see `applicatorFramingOverride`) so SKUs with tassels/bulbs that extend
+ * beyond the bottle body don't get cropped at the canvas edge.
  */
-export function buildPresetBlock(preset: ImagePreset): string {
+export function buildPresetBlock(
+  preset: ImagePreset,
+  options: { compositionOverride?: string } = {},
+): string {
   const orientationLabel =
     preset.orientation === "landscape"
       ? "landscape"
       : preset.orientation === "square"
         ? "square"
         : "portrait";
+
+  const composition = options.compositionOverride ?? preset.compositionLanguage;
 
   return [
     "PRESET:",
@@ -374,7 +435,7 @@ export function buildPresetBlock(preset: ImagePreset): string {
     `- Background: ${preset.backgroundDescription}`,
     `- Lighting: ${preset.lightingLanguage}`,
     `- Shadow: ${preset.shadowLanguage}`,
-    `- Composition: ${preset.compositionLanguage}`,
+    `- Composition: ${composition}`,
     `- Quality: ${preset.qualityLanguage}`,
     `- Negatives: ${preset.negativeLanguage}`,
   ].join("\n");
