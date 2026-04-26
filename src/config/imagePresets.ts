@@ -245,6 +245,45 @@ export const LANDSCAPE_HERO_2400X1350: ImagePreset = {
   negativeLanguage: SHARED_NEGATIVE_LANGUAGE,
 };
 
+/**
+ * Exploded "uncapped + cap-beside" variant of the Grid Card preset for SKUs
+ * where the catalog photography traditionally shows the bottle with its
+ * over-cap removed and standing upright next to it (Lotion Pump · Clear
+ * Overcap variants, decorative cap+stopper SKUs, etc.). Same canvas, same
+ * background, same lighting — only the composition language changes.
+ *
+ * Use when the productGroup's primary differentiator is the over-cap and
+ * showing it integrated would obscure the inner mechanism. Otherwise stick
+ * with the standard Grid Card.
+ */
+export const GRID_CARD_EXPLODED_2000X2200: ImagePreset = {
+  id: "grid-card-exploded-2000x2200",
+  label: "Grid Card · Exploded (cap beside) · 2000 × 2200",
+  purpose:
+    "Catalog grid tile for SKUs where the over-cap is shown removed and standing beside the bottle (e.g. Lotion Pump · Clear Overcap, decorative stopper variants). Same canvas, lighting, and background as the standard Grid Card — composition is the only change.",
+  kind: "final_render",
+  canvas: { widthPx: 2000, heightPx: 2200 },
+  aspectRatio: "10:11",
+  orientation: "portrait",
+  backgroundHex: "#EEE6D4",
+  backgroundDescription: PARCHMENT_BACKGROUND_DESCRIPTION,
+  lightingLanguage: SHARED_LIGHTING_LANGUAGE,
+  shadowLanguage: SHARED_SHADOW_LANGUAGE,
+  compositionLanguage:
+    "EXPLODED PRODUCT LAYOUT — clean catalog-style two-element arrangement, NO creative staging, NO artistic tilts, NO dramatic angles. " +
+    "The BOTTLE stands UPRIGHT, slightly LEFT of the frame's horizontal centre, with its cap or over-cap REMOVED so the fitment / pump / dropper / sprayer assembly at the top of the neck is fully visible. " +
+    "The CAP (or over-cap) stands UPRIGHT IN ITS NATURAL ORIENTATION to the RIGHT of the bottle — opening-side DOWN, resting on its circular opening rim exactly the way a cap naturally sits on a flat surface. Do NOT lay the cap on its side. Do NOT tilt the cap. Do NOT show the cap's inside cavity. " +
+    "Both the BOTTLE and the CAP share the same implied floor line so their contact shadows align as one ground plane. " +
+    "Horizontal spacing: the cap is positioned approximately 25–30% of the frame width to the right of the bottle's vertical axis, at the same ground level as the bottle's base. The cap's top is roughly level with the bottle's shoulder (the cap is clearly smaller than the bottle). " +
+    "The bottle fills approximately 65–70% of the frame's vertical height; the cap is visibly smaller and to the right, consistent with its actual real-world size. " +
+    "Each object has its OWN individual contact shadow casting BACK-RIGHT (matching the preset's shadow direction), not merged into one shadow. " +
+    "IMPORTANT: there is exactly ONE bottle and exactly ONE cap in the frame — never duplicate the product. No creative props, no flowers, no secondary objects.",
+  qualityLanguage: SHARED_QUALITY_LANGUAGE,
+  negativeLanguage:
+    SHARED_NEGATIVE_LANGUAGE +
+    "; no cap lying on its side, no tilted cap, no cap inverted (opening-up), no cap floating; no merged single shadow under both objects (each gets its own contact shadow); no third object in the frame",
+};
+
 export const SQUARE_MARKETPLACE_1800X1800: ImagePreset = {
   id: "square-marketplace-1800x1800",
   label: "Square Marketplace · 1800 × 1800",
@@ -265,6 +304,7 @@ export const SQUARE_MARKETPLACE_1800X1800: ImagePreset = {
 
 export const IMAGE_PRESETS: Record<string, ImagePreset> = {
   [GRID_CARD_2000X2200.id]: GRID_CARD_2000X2200,
+  [GRID_CARD_EXPLODED_2000X2200.id]: GRID_CARD_EXPLODED_2000X2200,
   [SANITY_HERO_928X1152.id]: SANITY_HERO_928X1152,
   [PAPER_DOLL_COMPONENT_1000X1300.id]: PAPER_DOLL_COMPONENT_1000X1300,
   [PAPER_DOLL_COMPONENT_1500X1300.id]: PAPER_DOLL_COMPONENT_1500X1300,
@@ -274,6 +314,7 @@ export const IMAGE_PRESETS: Record<string, ImagePreset> = {
 
 export const IMAGE_PRESET_LIST: ImagePreset[] = [
   GRID_CARD_2000X2200,
+  GRID_CARD_EXPLODED_2000X2200,
   SANITY_HERO_928X1152,
   PAPER_DOLL_COMPONENT_1000X1300,
   PAPER_DOLL_COMPONENT_1500X1300,

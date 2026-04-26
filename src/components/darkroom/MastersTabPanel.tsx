@@ -8,8 +8,8 @@
  * so we inherit its proven auth + storage + library-tag path.
  */
 
-import { useMemo, useRef, useState } from "react";
-import { Loader2, Sparkles, Check, AlertCircle, Download, RotateCcw, ImageIcon, Wand2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Loader2, Sparkles, Check, AlertCircle, Download, RotateCcw, ImageIcon, Wand2, FolderUp, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboarding } from "@/hooks/useOnboarding";
@@ -45,11 +45,22 @@ import {
   type AssembledPrompt,
   type LiquidSpec,
 } from "@/lib/product-image/promptAssembler";
+import {
+  classifyReferenceFilename,
+  referenceMatchKeyFor,
+  referenceMatchKeyForClassification,
+} from "@/lib/product-image/classifyReferenceFilename";
 import type { Product } from "@/integrations/convex/bestBottles";
 import {
   useAssembledPromptGeneration,
   type AssembledGenerationResult,
 } from "@/hooks/useAssembledPromptGeneration";
+
+interface FolderReferenceEntry {
+  url: string;
+  name: string;
+  matchKey: string;
+}
 
 interface MastersTabPanelProps {
   /** Selected variant from the Studio's left rail. */
@@ -82,9 +93,143 @@ export function MastersTabPanel({
   const [isUploadingRef, setIsUploadingRef] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
+  // Reference folder — operator drops a folder of assembled-bottle PNGs once
+  // per family (e.g. 11 PNGs for Empire 50ml + 100ml canonical SKUs).
+  // Filename is auto-classified into (capacityMl, applicator, capColor) and
+  // stored in this map keyed by `referenceMatchKey`. When the operator
+  // selects a SKU in the left rail, the matching reference auto-loads as
+  // customReference. Single-image upload (above) still works for one-off
+  // overrides and unmatched SKUs.
+  const [referenceFolder, setReferenceFolder] = useState<
+    Map<string, FolderReferenceEntry>
+  >(new Map());
+  const [unclassifiedReferences, setUnclassifiedReferences] = useState<
+    Array<{ name: string; url: string }>
+  >([]);
+  const [isFolderUploading, setIsFolderUploading] = useState(false);
+  const [folderUserOverride, setFolderUserOverride] = useState<boolean>(false);
+  const folderInputRef = useRef<HTMLInputElement>(null);
+
   const { user } = useAuth();
   const { currentOrganizationId } = useOnboarding();
   const { generate, isGenerating, error, result, reset } = useAssembledPromptGeneration();
+
+  /**
+   * Auto-load the matching folder reference when the operator changes the
+   * selected SKU in the left rail. Skipped when the operator has manually
+   * dropped a single-image reference (folderUserOverride=true) so the
+   * single upload isn't silently overwritten on SKU navigation.
+   */
+  useEffect(() => {
+    if (folderUserOverride) return;
+    if (!selectedProduct || referenceFolder.size === 0) return;
+    const key = referenceMatchKeyFor({
+      kind: "fitment",
+      capacityMl: selectedProduct.capacityMl,
+      glassColor: selectedProduct.color,
+      applicator: selectedProduct.applicator,
+      capColor: selectedProduct.capColor,
+    });
+    const matched = referenceFolder.get(key);
+    if (matched) {
+      setCustomReference({ url: matched.url, name: matched.name });
+    } else {
+      setCustomReference(null);
+    }
+  }, [selectedProduct, referenceFolder, folderUserOverride]);
+
+  /**
+   * Upload a folder of assembled-bottle PNGs. Each file is uploaded to
+   * Supabase Storage in parallel; filenames are classified into match keys
+   * (capacityMl × applicator × capColor) and stored. Unclassified files are
+   * surfaced for manual review.
+   */
+  const handleFolderUpload = async (files: FileList | File[]) => {
+    if (!user || !currentOrganizationId) {
+      toast({
+        title: "Sign-in required",
+        description: "Must be signed in to upload references.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const arr = Array.from(files);
+    if (arr.length === 0) return;
+    setIsFolderUploading(true);
+
+    let matched = 0;
+    let unclassified = 0;
+    const newMap = new Map(referenceFolder);
+    const newUnclassified: Array<{ name: string; url: string }> = [];
+
+    await Promise.all(
+      arr.map(async (file) => {
+        try {
+          const ts = Date.now();
+          const rand = Math.random().toString(36).slice(2, 8);
+          const ext = (file.name.split(".").pop() || "png").toLowerCase();
+          const path = `${currentOrganizationId}/${user.id}/studio-references-folder/${ts}_${rand}.${ext}`;
+          const { error: uploadError } = await supabase.storage
+            .from("generated-images")
+            .upload(path, file, {
+              cacheControl: "3600",
+              upsert: false,
+              contentType: file.type || "image/png",
+            });
+          if (uploadError) throw uploadError;
+          const { data: urlData } = supabase.storage
+            .from("generated-images")
+            .getPublicUrl(path);
+          if (!urlData?.publicUrl) throw new Error("No public URL");
+
+          const classification = classifyReferenceFilename(file.name);
+          if (!classification) {
+            unclassified++;
+            newUnclassified.push({ name: file.name, url: urlData.publicUrl });
+            return;
+          }
+          const key = referenceMatchKeyForClassification(classification);
+          newMap.set(key, {
+            url: urlData.publicUrl,
+            name: file.name,
+            matchKey: key,
+          });
+          matched++;
+        } catch (e) {
+          console.warn("[MastersTabPanel] folder file upload failed", file.name, e);
+        }
+      }),
+    );
+
+    setReferenceFolder(newMap);
+    setUnclassifiedReferences((prev) => [...prev, ...newUnclassified]);
+    setFolderUserOverride(false); // fresh folder upload — re-enable auto-match
+    setIsFolderUploading(false);
+    toast({
+      title: "Reference folder uploaded",
+      description: `${matched} matched · ${unclassified} unclassified · ${arr.length} total`,
+    });
+  };
+
+  const clearReferenceFolder = () => {
+    setReferenceFolder(new Map());
+    setUnclassifiedReferences([]);
+    setCustomReference(null);
+    setFolderUserOverride(false);
+  };
+
+  /** Compute whether the currently-selected SKU has a matched folder entry. */
+  const folderMatchForCurrentSku = useMemo(() => {
+    if (!selectedProduct || referenceFolder.size === 0) return null;
+    const key = referenceMatchKeyFor({
+      kind: "fitment",
+      capacityMl: selectedProduct.capacityMl,
+      glassColor: selectedProduct.color,
+      applicator: selectedProduct.applicator,
+      capColor: selectedProduct.capColor,
+    });
+    return referenceFolder.get(key) ?? null;
+  }, [selectedProduct, referenceFolder]);
 
   /**
    * UploadZone returns either a freshly-picked File (drag-drop or browse) or
@@ -93,6 +238,10 @@ export function MastersTabPanel({
    * since they're already in our generated-images bucket.
    */
   const handleReferencePicked = async (img: { url: string; file?: File; name?: string }) => {
+    // Manual single-image upload takes precedence over folder auto-match.
+    // Mark the override so SKU navigation doesn't silently overwrite this
+    // user-chosen reference.
+    setFolderUserOverride(true);
     // Library pick — already a fetchable URL
     if (!img.file) {
       setCustomReference(img);
@@ -142,7 +291,24 @@ export function MastersTabPanel({
     }
   };
 
-  const clearCustomReference = () => setCustomReference(null);
+  const clearCustomReference = () => {
+    setCustomReference(null);
+    // Clearing the manual override re-enables folder auto-match on the
+    // next SKU change. If a folder is loaded and the current SKU matches,
+    // re-apply the match immediately.
+    setFolderUserOverride(false);
+    if (selectedProduct && referenceFolder.size > 0) {
+      const key = referenceMatchKeyFor({
+        kind: "fitment",
+        capacityMl: selectedProduct.capacityMl,
+        glassColor: selectedProduct.color,
+        applicator: selectedProduct.applicator,
+        capColor: selectedProduct.capColor,
+      });
+      const matched = referenceFolder.get(key);
+      if (matched) setCustomReference({ url: matched.url, name: matched.name });
+    }
+  };
 
   const selectedPreset = useMemo(
     () => MASTERS_PRESETS.find((p) => p.id === presetId) ?? MASTERS_PRESETS[0],
@@ -277,17 +443,187 @@ export function MastersTabPanel({
         )}
       </div>
 
+      {/* REFERENCE FOLDER — drop a folder of assembled-bottle PNGs once per
+          family. Each PNG is uploaded to Supabase Storage and classified by
+          filename (e.g. empire-50ml-bulb-tassel-black.png → matched to the
+          Bulb-Tassel/Black SKU). When the operator selects any matched SKU
+          in the left rail, the corresponding reference auto-loads. The
+          single-image upload below remains for one-off overrides and SKUs
+          the folder doesn't cover. */}
       <div className="space-y-2 pt-1 border-t" style={{ borderColor: "var(--darkroom-border-subtle)" }}>
         <div className="flex items-center justify-between pt-2">
           <Label className="text-xs uppercase tracking-wider" style={{ color: "var(--darkroom-text-dim)" }}>
-            Reference image (override)
+            Reference folder (auto-match by SKU)
+          </Label>
+          {referenceFolder.size > 0 && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={clearReferenceFolder}
+              className="h-6 px-2 text-[10px]"
+              style={{ color: "var(--darkroom-text-dim)" }}
+            >
+              <X className="w-3 h-3 mr-1" /> Clear folder
+            </Button>
+          )}
+        </div>
+
+        <input
+          ref={folderInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          multiple
+          // @ts-expect-error — webkitdirectory is a non-standard attribute
+          webkitdirectory=""
+          directory=""
+          className="hidden"
+          onChange={(e) => {
+            if (e.target.files && e.target.files.length > 0) {
+              handleFolderUpload(e.target.files);
+              e.target.value = "";
+            }
+          }}
+        />
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          multiple
+          className="hidden"
+          id="masters-folder-files-fallback"
+          onChange={(e) => {
+            if (e.target.files && e.target.files.length > 0) {
+              handleFolderUpload(e.target.files);
+              e.target.value = "";
+            }
+          }}
+        />
+
+        <div
+          className="rounded border-2 border-dashed p-3 text-center space-y-2 transition-colors"
+          style={{
+            borderColor: isFolderUploading
+              ? "var(--darkroom-accent)"
+              : "var(--darkroom-border-subtle)",
+            background: isFolderUploading
+              ? "rgba(184, 149, 106, 0.05)"
+              : "var(--darkroom-surface)",
+          }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+              handleFolderUpload(e.dataTransfer.files);
+            }
+          }}
+        >
+          <div className="flex items-center justify-center gap-2">
+            {isFolderUploading ? (
+              <Loader2 className="w-4 h-4 animate-spin" style={{ color: "var(--darkroom-accent)" }} />
+            ) : (
+              <FolderUp className="w-4 h-4" style={{ color: "var(--darkroom-accent)" }} />
+            )}
+            <span className="text-xs font-medium" style={{ color: "var(--darkroom-text)" }}>
+              {isFolderUploading
+                ? "Uploading folder…"
+                : referenceFolder.size > 0
+                  ? `${referenceFolder.size} reference${referenceFolder.size === 1 ? "" : "s"} loaded`
+                  : "Drop a folder of PSD-rendered PNGs"}
+            </span>
+          </div>
+          <p className="text-[10px]" style={{ color: "var(--darkroom-text-dim)" }}>
+            Naming: <code>empire-50ml-bulb-tassel-black.png</code>, <code>empire-100ml-reducer-matte-silver.png</code>, etc.
+            One folder per family — references auto-match to the SKU you select.
+          </p>
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => folderInputRef.current?.click()}
+              disabled={isFolderUploading}
+              className="h-7 text-[11px] border-white/15 bg-white/[0.02] text-white hover:bg-white/[0.06] hover:text-white"
+            >
+              Browse folder
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => document.getElementById("masters-folder-files-fallback")?.click()}
+              disabled={isFolderUploading}
+              className="h-7 text-[11px]"
+              style={{ color: "var(--darkroom-text-dim)" }}
+            >
+              Or pick files
+            </Button>
+          </div>
+        </div>
+
+        {unclassifiedReferences.length > 0 && (
+          <div
+            className="rounded border p-2 space-y-1"
+            style={{
+              borderColor: "rgba(245, 158, 11, 0.4)",
+              background: "rgba(245, 158, 11, 0.05)",
+            }}
+          >
+            <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider" style={{ color: "#FBBF24" }}>
+              <AlertCircle className="w-3 h-3" />
+              {unclassifiedReferences.length} unclassified — rename these or upload as single override
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {unclassifiedReferences.map((f) => (
+                <span
+                  key={f.url}
+                  className="text-[10px] font-mono px-1 py-0.5 rounded border"
+                  style={{
+                    borderColor: "rgba(245, 158, 11, 0.3)",
+                    color: "#FBBF24",
+                  }}
+                >
+                  {f.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {selectedProduct && referenceFolder.size > 0 && (
+          <div
+            className="text-[10px] flex items-center gap-1"
+            style={{ color: folderMatchForCurrentSku ? "var(--darkroom-success, #4ADE80)" : "var(--darkroom-text-dim)" }}
+          >
+            {folderMatchForCurrentSku ? (
+              <>
+                <Check className="w-3 h-3" />
+                Folder match for this SKU: <span className="font-mono">{folderMatchForCurrentSku.name}</span>
+              </>
+            ) : (
+              <>
+                <AlertCircle className="w-3 h-3" />
+                No folder reference matches this SKU — drop a single-image override below if needed
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-2 pt-1 border-t" style={{ borderColor: "var(--darkroom-border-subtle)" }}>
+        <div className="flex items-center justify-between pt-2">
+          <Label className="text-xs uppercase tracking-wider" style={{ color: "var(--darkroom-text-dim)" }}>
+            Reference image (single override)
           </Label>
         </div>
 
         <UploadZone
           type="product"
           label="Drop reference PNG here"
-          description="Drag-drop, browse, or pick from Image Library — overrides Convex's legacy .gif so gpt-image-2 actually anchors to the real product photography."
+          description="Drag-drop, browse, or pick from Image Library — overrides folder auto-match for one-off testing."
           image={customReference}
           onUpload={handleReferencePicked}
           onRemove={clearCustomReference}
