@@ -45,11 +45,6 @@ import {
   type AssembledPrompt,
   type LiquidSpec,
 } from "@/lib/product-image/promptAssembler";
-import {
-  classifyReferenceFilename,
-  referenceMatchKeyFor,
-  referenceMatchKeyForClassification,
-} from "@/lib/product-image/classifyReferenceFilename";
 import type { Product } from "@/integrations/convex/bestBottles";
 import {
   useAssembledPromptGeneration,
@@ -59,7 +54,50 @@ import {
 interface FolderReferenceEntry {
   url: string;
   name: string;
+  /** Map key = Grace SKU (uppercase), or `${graceSku}--${modifier}` for variants. */
   matchKey: string;
+}
+
+/**
+ * Presets that swap the canonical bottle composition (e.g. exploded cap-beside
+ * layout) need a separate reference PNG. A file named
+ * `GB-EMP-CLR-100ML-BST-BLK--exploded.png` is the exploded variant of the
+ * standard `GB-EMP-CLR-100ML-BST-BLK.png`. The map below tells the lookup
+ * which suffix to prefer for a given preset id.
+ */
+const PRESET_MODIFIER: Record<string, string> = {
+  "grid-card-exploded-2000x2200": "exploded",
+};
+
+/**
+ * Parse a reference filename into its Grace SKU + optional modifier suffix.
+ *
+ *   `48. GB-EMP-CLR-100ML-BST-BLK.png`           → ["GB-EMP-CLR-100ML-BST-BLK", undefined]
+ *   `GB-EMP-CLR-100ML-BST-BLK--exploded.png`     → ["GB-EMP-CLR-100ML-BST-BLK", "exploded"]
+ *
+ * The leading "48. " ordering prefix that ships with PSD exports is stripped
+ * defensively. Modifier separator is `--` (double dash) so it never collides
+ * with the single dashes inside the Grace SKU itself.
+ */
+function parseGraceSkuFilename(
+  filename: string,
+): { graceSku: string; modifier?: string } | null {
+  const stem = filename
+    .replace(/\.[a-z0-9]+$/i, "")   // drop extension
+    .replace(/^\d+\.\s*/, "")        // drop "48. " ordering prefix from PSD exports
+    .trim();
+  if (!stem) return null;
+  const [skuPart, ...rest] = stem.split("--");
+  const graceSku = skuPart.trim().toUpperCase();
+  if (!graceSku) return null;
+  const modifier = rest.length > 0 ? rest.join("--").trim().toLowerCase() : undefined;
+  return { graceSku, modifier };
+}
+
+/** Build the Map key from a Grace SKU + optional modifier. */
+function folderKey(graceSku: string, modifier?: string): string {
+  const base = graceSku.toUpperCase();
+  return modifier ? `${base}--${modifier.toLowerCase()}` : base;
 }
 
 interface MastersTabPanelProps {
@@ -93,18 +131,17 @@ export function MastersTabPanel({
   const [isUploadingRef, setIsUploadingRef] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
-  // Reference folder — operator drops a folder of assembled-bottle PNGs once
-  // per family (e.g. 11 PNGs for Empire 50ml + 100ml canonical SKUs).
-  // Filename is auto-classified into (capacityMl, applicator, capColor) and
-  // stored in this map keyed by `referenceMatchKey`. When the operator
-  // selects a SKU in the left rail, the matching reference auto-loads as
-  // customReference. Single-image upload (above) still works for one-off
-  // overrides and unmatched SKUs.
+  // Reference folder — operator drops a folder of PSD-rendered PNGs whose
+  // filenames match the Convex Grace SKU exactly (e.g.
+  // `GB-EMP-CLR-100ML-BST-BLK.png`). Each file is uploaded to Supabase Storage
+  // and stored in this map keyed by Grace SKU. When the operator selects a SKU
+  // in the left rail, the matching reference auto-loads as customReference.
+  // Single-image upload (below) still wins as a one-off override.
   const [referenceFolder, setReferenceFolder] = useState<
     Map<string, FolderReferenceEntry>
   >(new Map());
-  const [unclassifiedReferences, setUnclassifiedReferences] = useState<
-    Array<{ name: string; url: string }>
+  const [uploadFailures, setUploadFailures] = useState<
+    Array<{ name: string; error: string }>
   >([]);
   const [isFolderUploading, setIsFolderUploading] = useState(false);
   const [folderUserOverride, setFolderUserOverride] = useState<boolean>(false);
@@ -115,34 +152,49 @@ export function MastersTabPanel({
   const { generate, isGenerating, error, result, reset } = useAssembledPromptGeneration();
 
   /**
+   * Look up a folder entry for the given SKU + preset. If the preset has a
+   * registered modifier (e.g. "exploded"), prefer the variant key first and
+   * fall back to the plain Grace SKU. Centralized so the effect, the memo,
+   * and clearCustomReference all agree on the lookup rule.
+   */
+  const lookupFolderReference = (
+    sku: Product,
+    preset: string,
+  ): FolderReferenceEntry | null => {
+    const baseKey = folderKey(sku.graceSku);
+    const modifier = PRESET_MODIFIER[preset];
+    if (modifier) {
+      const variant = referenceFolder.get(folderKey(sku.graceSku, modifier));
+      if (variant) return variant;
+    }
+    return referenceFolder.get(baseKey) ?? null;
+  };
+
+  /**
    * Auto-load the matching folder reference when the operator changes the
-   * selected SKU in the left rail. Skipped when the operator has manually
-   * dropped a single-image reference (folderUserOverride=true) so the
-   * single upload isn't silently overwritten on SKU navigation.
+   * selected SKU or preset. Skipped when the operator has manually dropped a
+   * single-image reference (folderUserOverride=true) so that one-off upload
+   * isn't silently overwritten by SKU navigation.
    */
   useEffect(() => {
     if (folderUserOverride) return;
     if (!selectedProduct || referenceFolder.size === 0) return;
-    const key = referenceMatchKeyFor({
-      kind: "fitment",
-      capacityMl: selectedProduct.capacityMl,
-      glassColor: selectedProduct.color,
-      applicator: selectedProduct.applicator,
-      capColor: selectedProduct.capColor,
-    });
-    const matched = referenceFolder.get(key);
+    const matched = lookupFolderReference(selectedProduct, presetId);
     if (matched) {
       setCustomReference({ url: matched.url, name: matched.name });
     } else {
       setCustomReference(null);
     }
-  }, [selectedProduct, referenceFolder, folderUserOverride]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProduct, presetId, referenceFolder, folderUserOverride]);
 
   /**
-   * Upload a folder of assembled-bottle PNGs. Each file is uploaded to
-   * Supabase Storage in parallel; filenames are classified into match keys
-   * (capacityMl × applicator × capColor) and stored. Unclassified files are
-   * surfaced for manual review.
+   * Upload a folder of PSD-rendered PNGs. Each filename is treated as the
+   * Grace SKU of the bottle it depicts (`GB-EMP-CLR-100ML-BST-BLK.png`),
+   * with an optional `--<modifier>` suffix for preset variants like
+   * `--exploded`. Files are uploaded to Supabase Storage in parallel; per-file
+   * failures are collected and surfaced loudly in the UI so we don't silently
+   * lose 15 of 16 uploads to an RLS policy or upstream race.
    */
   const handleFolderUpload = async (files: FileList | File[]) => {
     if (!user || !currentOrganizationId) {
@@ -157,14 +209,18 @@ export function MastersTabPanel({
     if (arr.length === 0) return;
     setIsFolderUploading(true);
 
-    let matched = 0;
-    let unclassified = 0;
     const newMap = new Map(referenceFolder);
-    const newUnclassified: Array<{ name: string; url: string }> = [];
+    const failures: Array<{ name: string; error: string }> = [];
+    let stored = 0;
 
     await Promise.all(
       arr.map(async (file) => {
         try {
+          const parsed = parseGraceSkuFilename(file.name);
+          if (!parsed) {
+            throw new Error("Filename did not yield a Grace SKU");
+          }
+
           const ts = Date.now();
           const rand = Math.random().toString(36).slice(2, 8);
           const ext = (file.name.split(".").pop() || "png").toLowerCase();
@@ -176,44 +232,53 @@ export function MastersTabPanel({
               upsert: false,
               contentType: file.type || "image/png",
             });
-          if (uploadError) throw uploadError;
+          if (uploadError) {
+            console.error(
+              "[MastersTabPanel] supabase upload error",
+              file.name,
+              uploadError,
+            );
+            throw new Error(uploadError.message || "Supabase upload failed");
+          }
           const { data: urlData } = supabase.storage
             .from("generated-images")
             .getPublicUrl(path);
-          if (!urlData?.publicUrl) throw new Error("No public URL");
+          if (!urlData?.publicUrl) throw new Error("No public URL returned");
 
-          const classification = classifyReferenceFilename(file.name);
-          if (!classification) {
-            unclassified++;
-            newUnclassified.push({ name: file.name, url: urlData.publicUrl });
-            return;
-          }
-          const key = referenceMatchKeyForClassification(classification);
+          const key = folderKey(parsed.graceSku, parsed.modifier);
           newMap.set(key, {
             url: urlData.publicUrl,
             name: file.name,
             matchKey: key,
           });
-          matched++;
-        } catch (e) {
-          console.warn("[MastersTabPanel] folder file upload failed", file.name, e);
+          stored++;
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : String(e);
+          console.warn("[MastersTabPanel] folder file upload failed", file.name, msg);
+          failures.push({ name: file.name, error: msg });
         }
       }),
     );
 
     setReferenceFolder(newMap);
-    setUnclassifiedReferences((prev) => [...prev, ...newUnclassified]);
+    setUploadFailures((prev) => [...prev, ...failures]);
     setFolderUserOverride(false); // fresh folder upload — re-enable auto-match
     setIsFolderUploading(false);
+
+    const failedCount = failures.length;
     toast({
-      title: "Reference folder uploaded",
-      description: `${matched} matched · ${unclassified} unclassified · ${arr.length} total`,
+      title: failedCount > 0 ? "Folder uploaded with errors" : "Reference folder uploaded",
+      description:
+        failedCount > 0
+          ? `${stored} stored · ${failedCount} failed · ${arr.length} total — check the failed list below for details.`
+          : `${stored} stored · ${arr.length} total`,
+      variant: failedCount > 0 ? "destructive" : "default",
     });
   };
 
   const clearReferenceFolder = () => {
     setReferenceFolder(new Map());
-    setUnclassifiedReferences([]);
+    setUploadFailures([]);
     setCustomReference(null);
     setFolderUserOverride(false);
   };
@@ -221,15 +286,9 @@ export function MastersTabPanel({
   /** Compute whether the currently-selected SKU has a matched folder entry. */
   const folderMatchForCurrentSku = useMemo(() => {
     if (!selectedProduct || referenceFolder.size === 0) return null;
-    const key = referenceMatchKeyFor({
-      kind: "fitment",
-      capacityMl: selectedProduct.capacityMl,
-      glassColor: selectedProduct.color,
-      applicator: selectedProduct.applicator,
-      capColor: selectedProduct.capColor,
-    });
-    return referenceFolder.get(key) ?? null;
-  }, [selectedProduct, referenceFolder]);
+    return lookupFolderReference(selectedProduct, presetId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProduct, presetId, referenceFolder]);
 
   /**
    * UploadZone returns either a freshly-picked File (drag-drop or browse) or
@@ -298,14 +357,7 @@ export function MastersTabPanel({
     // re-apply the match immediately.
     setFolderUserOverride(false);
     if (selectedProduct && referenceFolder.size > 0) {
-      const key = referenceMatchKeyFor({
-        kind: "fitment",
-        capacityMl: selectedProduct.capacityMl,
-        glassColor: selectedProduct.color,
-        applicator: selectedProduct.applicator,
-        capColor: selectedProduct.capColor,
-      });
-      const matched = referenceFolder.get(key);
+      const matched = lookupFolderReference(selectedProduct, presetId);
       if (matched) setCustomReference({ url: matched.url, name: matched.name });
     }
   };
@@ -536,8 +588,11 @@ export function MastersTabPanel({
             </span>
           </div>
           <p className="text-[10px]" style={{ color: "var(--darkroom-text-dim)" }}>
-            Naming: <code>empire-50ml-bulb-tassel-black.png</code>, <code>empire-100ml-reducer-matte-silver.png</code>, etc.
-            One folder per family — references auto-match to the SKU you select.
+            Filenames must equal the Convex Grace SKU exactly — e.g.{" "}
+            <code>GB-EMP-CLR-100ML-BST-BLK.png</code>. Preset variants use a{" "}
+            <code>--modifier</code> suffix:{" "}
+            <code>GB-EMP-CLR-100ML-BST-BLK--exploded.png</code>.
+            Leading <code>"48. "</code> ordering prefixes from PSD exports are stripped automatically.
           </p>
           <div className="flex items-center justify-center gap-2">
             <Button
@@ -564,30 +619,24 @@ export function MastersTabPanel({
           </div>
         </div>
 
-        {unclassifiedReferences.length > 0 && (
+        {uploadFailures.length > 0 && (
           <div
             className="rounded border p-2 space-y-1"
             style={{
-              borderColor: "rgba(245, 158, 11, 0.4)",
-              background: "rgba(245, 158, 11, 0.05)",
+              borderColor: "rgba(239, 68, 68, 0.4)",
+              background: "rgba(239, 68, 68, 0.05)",
             }}
           >
-            <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider" style={{ color: "#FBBF24" }}>
+            <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider" style={{ color: "#F87171" }}>
               <AlertCircle className="w-3 h-3" />
-              {unclassifiedReferences.length} unclassified — rename these or upload as single override
+              {uploadFailures.length} failed upload{uploadFailures.length === 1 ? "" : "s"} — see error messages below
             </div>
-            <div className="flex flex-wrap gap-1">
-              {unclassifiedReferences.map((f) => (
-                <span
-                  key={f.url}
-                  className="text-[10px] font-mono px-1 py-0.5 rounded border"
-                  style={{
-                    borderColor: "rgba(245, 158, 11, 0.3)",
-                    color: "#FBBF24",
-                  }}
-                >
-                  {f.name}
-                </span>
+            <div className="space-y-0.5 max-h-32 overflow-auto">
+              {uploadFailures.map((f, i) => (
+                <div key={`${f.name}-${i}`} className="text-[10px] font-mono" style={{ color: "#F87171" }}>
+                  <span className="opacity-90">{f.name}</span>
+                  <span className="opacity-60"> — {f.error}</span>
+                </div>
               ))}
             </div>
           </div>
@@ -650,6 +699,26 @@ export function MastersTabPanel({
         />
       </div>
 
+      {!customReference && (
+        <div
+          className="rounded border p-2 flex items-start gap-2"
+          style={{
+            borderColor: "rgba(245, 158, 11, 0.4)",
+            background: "rgba(245, 158, 11, 0.05)",
+            color: "#FBBF24",
+          }}
+        >
+          <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+          <div className="text-[11px] leading-snug">
+            <div className="font-medium">No reference image attached</div>
+            <div className="opacity-90">
+              The model will run prompt-only and output is likely to be off-brand. Drop a folder
+              named after Grace SKUs above, or a single PNG below, before generating.
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex gap-2">
         <Button
           onClick={handleGenerate}
@@ -664,7 +733,7 @@ export function MastersTabPanel({
           ) : (
             <>
               <Sparkles className="w-4 h-4 mr-2" />
-              Generate master
+              {customReference ? "Generate master" : "Generate without reference"}
             </>
           )}
         </Button>
