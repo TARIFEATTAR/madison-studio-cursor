@@ -314,6 +314,7 @@ export default function BestBottlesStudio() {
                   <MastersTabPanel
                     selectedProduct={selectedVariant}
                     familyVariants={data.variants}
+                    allFamilyProducts={data.allFamilyProducts}
                     familyName={data.group.family}
                     onApproveMaster={async (result, product) => {
                       if (!currentOrganizationId || !groupSlug) {

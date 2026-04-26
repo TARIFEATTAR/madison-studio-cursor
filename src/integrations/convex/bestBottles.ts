@@ -122,6 +122,14 @@ export interface ExpandedProductGroupResult {
   variants: Product[];
   /** Same variants, bucketed by applicator for grouped rendering in the UI. */
   applicatorBuckets: ApplicatorBucket[];
+  /**
+   * Every variant across the ENTIRE family (any capacity, any color). The
+   * Masters tab uses this for reference-folder coverage analysis: when an
+   * operator drops a folder spanning multiple capacities, files for the
+   * non-current capacity should still bind correctly rather than appearing
+   * as orphans purely because the current group view is filtered.
+   */
+  allFamilyProducts: Product[];
 }
 
 /**
@@ -171,5 +179,6 @@ export async function getProductGroupWithApplicatorSiblings(
     group,
     variants: allVariants,
     applicatorBuckets,
+    allFamilyProducts: familyProducts,
   };
 }

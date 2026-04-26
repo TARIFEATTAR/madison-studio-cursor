@@ -110,6 +110,14 @@ interface MastersTabPanelProps {
    * generation if the parent doesn't pass it.
    */
   familyVariants?: Product[];
+  /**
+   * Every SKU in the family across ALL capacities and glass colors. Used
+   * for orphan analysis on the dropped reference folder so files for, say,
+   * 50ml don't appear orphaned just because the current group view is
+   * scoped to 100ml. Optional — falls back to `familyVariants` when
+   * absent (older callers).
+   */
+  allFamilyProducts?: Product[];
   /** Family name for Library tagging. */
   familyName?: string | null;
   /** Optional callback when a master is approved. Parent can persist. */
@@ -119,6 +127,7 @@ interface MastersTabPanelProps {
 export function MastersTabPanel({
   selectedProduct,
   familyVariants,
+  allFamilyProducts,
   familyName,
   onApproveMaster,
 }: MastersTabPanelProps) {
@@ -326,11 +335,18 @@ export function MastersTabPanel({
    *     fall back to no-reference output unless the operator drops a
    *     single-image override.
    */
+  /**
+   * Orphan analysis runs against the WHOLE family (any capacity, any glass
+   * color) so a file for, say, 50ml doesn't appear orphaned purely because
+   * the operator is currently viewing the 100ml product group. Falls back
+   * to the current-group variants if the parent didn't pass the wider list.
+   */
   const familyGraceSet = useMemo(() => {
     const set = new Set<string>();
-    for (const v of familyVariants ?? []) set.add(v.graceSku.toUpperCase());
+    const source = allFamilyProducts ?? familyVariants ?? [];
+    for (const v of source) set.add(v.graceSku.toUpperCase());
     return set;
-  }, [familyVariants]);
+  }, [allFamilyProducts, familyVariants]);
 
   const orphanReferences = useMemo(() => {
     if (referenceFolder.size === 0 || familyGraceSet.size === 0) return [];
