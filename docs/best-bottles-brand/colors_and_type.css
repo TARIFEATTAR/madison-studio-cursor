@@ -1,0 +1,233 @@
+/* ============================================================
+   Best Bottles — Colors & Type Foundations
+   Source: Best-Bottles-Website globals.css + layout.tsx
+   ============================================================ */
+
+/* Google Fonts — EB Garamond (display/serif), Cormorant (logo), Inter (sans) */
+@import url("https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Cormorant:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap");
+
+:root {
+  /* ── Brand palette — primary ─────────────────────────────── */
+  --obsidian:     #1D1D1F;   /* primary text, dark bar, footer */
+  --bone:         #F5F3EF;   /* default page background */
+  --muted-gold:   #C5A065;   /* primary accent / CTAs / brand */
+  --slate:        #637588;   /* secondary text, muted copy */
+  --champagne:    #D4C5A9;   /* borders, dividers */
+  --linen:        #FAF8F5;   /* soft surface (cards, sections) */
+  --travertine:   #EEE6D4;   /* warmer surface (image placeholders) */
+  --parchment:    #ECE5D8;   /* grid wrappers, filter rails */
+  --warm-white:   #FDFBF8;   /* near-white, warm */
+
+  /* ── Brand palette — portal / extended ───────────────────── */
+  --ash:          #9A9590;   /* muted meta text */
+  --ink:          #2C2C2E;   /* portal darker body */
+  --gold-dim:     #8B6F42;   /* darker gold accent */
+
+  /* ── Semantic foregrounds ────────────────────────────────── */
+  --fg-1: var(--obsidian);               /* body, headings */
+  --fg-2: var(--slate);                  /* supporting copy */
+  --fg-3: var(--ash);                    /* tertiary / meta */
+  --fg-on-dark: #FFFFFF;                 /* text on obsidian */
+  --fg-on-dark-muted: rgba(255,255,255,0.7);
+  --fg-accent: var(--muted-gold);
+
+  /* ── Semantic backgrounds ────────────────────────────────── */
+  --bg-page:       var(--bone);
+  --bg-surface:    var(--linen);
+  --bg-surface-2:  var(--warm-white);
+  --bg-card:       #FFFFFF;
+  --bg-warm:       var(--travertine);
+  --bg-grid:       var(--parchment);
+  --bg-inverse:    var(--obsidian);
+
+  /* ── Borders / lines ─────────────────────────────────────── */
+  --border:        var(--champagne);
+  --border-soft:   rgba(212, 197, 169, 0.5);   /* champagne/50 — canonical */
+  --border-hover:  var(--muted-gold);
+
+  /* ── Status ──────────────────────────────────────────────── */
+  --destructive:   #EF4444;
+  --success:       #5A8F6E;   /* derived; the codebase has no explicit success */
+
+  /* ── Tint overlays (used with /xx opacity in Tailwind) ───── */
+  --tint-gold-10:  rgba(197, 160, 101, 0.10);
+  --tint-gold-15:  rgba(197, 160, 101, 0.15);
+  --tint-gold-20:  rgba(197, 160, 101, 0.20);
+  --overlay-dark-55: rgba(29, 29, 31, 0.55);
+  --overlay-dark-25: rgba(29, 29, 31, 0.25);
+  --overlay-dark-10: rgba(29, 29, 31, 0.10);
+
+  /* ── Typography — families ───────────────────────────────── */
+  --font-sans:     "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif:    "EB Garamond", ui-serif, Georgia, "Times New Roman", serif;
+  --font-display:  "EB Garamond", ui-serif, Georgia, serif;
+  --font-cormorant:"Cormorant", "EB Garamond", ui-serif, Georgia, serif;
+
+  /* ── Typography — weights ────────────────────────────────── */
+  --w-regular: 400;
+  --w-medium:  500;
+  --w-semibold:600;
+  --w-bold:    700;
+
+  /* ── Typography — fluid scale (desktop-leaning) ──────────── */
+  --fs-display:   87px;   /* hero h1 */
+  --fs-h1:        56px;   /* section headers on color */
+  --fs-h2:        40px;   /* primary section title */
+  --fs-h3:        26px;   /* card title */
+  --fs-h4:        20px;   /* small card / quote */
+  --fs-body-lg:   18px;
+  --fs-body:      16px;
+  --fs-body-sm:   14px;
+  --fs-caption:   12px;
+  --fs-eyebrow:   12px;
+  --fs-micro:     10px;
+
+  /* ── Typography — line heights ───────────────────────────── */
+  --lh-tight: 1.05;
+  --lh-snug:  1.25;
+  --lh-body:  1.6;
+
+  /* ── Letter-spacing ──────────────────────────────────────── */
+  --tracking-tight:  -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.05em;
+  --tracking-eyebrow:0.25em;   /* uppercase eyebrow */
+  --tracking-nav:    0.15em;   /* dark announce bar */
+
+  /* ── Radii ───────────────────────────────────────────────── */
+  --radius-0:    0;
+  --radius-sm:   2px;      /* product cards, buttons (dominant) */
+  --radius-md:   6px;      /* shadcn --radius = 0.375rem */
+  --radius-lg:   10px;     /* design family cards */
+  --radius-xl:   12px;     /* search / nav input */
+  --radius-pill: 9999px;   /* pill CTAs, badges, avatars */
+
+  /* ── Shadows (restrained) ────────────────────────────────── */
+  --shadow-sm:  0 1px 2px rgba(29, 29, 31, 0.04), 0 1px 3px rgba(29, 29, 31, 0.06);
+  --shadow-md:  0 4px 12px rgba(29, 29, 31, 0.06), 0 2px 4px rgba(29, 29, 31, 0.04);
+  --shadow-lg:  0 10px 30px rgba(29, 29, 31, 0.08), 0 4px 12px rgba(29, 29, 31, 0.06);
+  --shadow-xl:  0 20px 40px rgba(29, 29, 31, 0.10);
+  --shadow-ring-gold: 0 0 0 2px rgba(197, 160, 101, 0.2);
+  --shadow-glow-gold: 0 0 16px 4px rgba(197, 160, 101, 0.2);
+
+  /* ── Spacing (4-based; Tailwind-aligned) ─────────────────── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+  --sp-20: 80px;
+  --sp-24: 96px;
+
+  /* ── Layout ──────────────────────────────────────────────── */
+  --content-max: 1440px;
+  --gutter-d: 24px;  /* px-6 */
+  --gutter-m: 16px;
+
+  /* ── Motion ──────────────────────────────────────────────── */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out:      cubic-bezier(0.22, 1, 0.36, 1);   /* FadeUp */
+  --dur-fast: 180ms;
+  --dur-base: 300ms;
+  --dur-slow: 600ms;
+  --dur-hero: 800ms;
+}
+
+/* ============================================================
+   Semantic elements — use these directly
+   ============================================================ */
+
+body {
+  background: var(--bg-page);
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection { background: var(--tint-gold-20); color: var(--obsidian); }
+
+h1, .h1 {
+  font-family: var(--font-display);
+  font-weight: var(--w-medium);
+  font-size: var(--fs-display);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg-1);
+}
+
+h2, .h2 {
+  font-family: var(--font-serif);
+  font-weight: var(--w-medium);
+  font-size: var(--fs-h2);
+  line-height: var(--lh-snug);
+  color: var(--fg-1);
+}
+
+h3, .h3 {
+  font-family: var(--font-serif);
+  font-weight: var(--w-medium);
+  font-size: var(--fs-h3);
+  line-height: var(--lh-snug);
+  color: var(--fg-1);
+}
+
+h4, .h4 {
+  font-family: var(--font-serif);
+  font-weight: var(--w-medium);
+  font-size: var(--fs-h4);
+  line-height: var(--lh-snug);
+  color: var(--fg-1);
+}
+
+p, .p {
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--fg-2);
+}
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--fs-eyebrow);
+  font-weight: var(--w-semibold);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--slate);
+}
+
+.eyebrow-gold { color: var(--muted-gold); }
+
+.quote {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: var(--fs-h4);
+  line-height: var(--lh-body);
+  color: var(--obsidian);
+}
+
+.caption {
+  font-size: var(--fs-caption);
+  color: var(--fg-3);
+  line-height: var(--lh-snug);
+}
+
+.logotype {
+  font-family: var(--font-cormorant);
+  font-weight: var(--w-semibold);
+  letter-spacing: var(--tracking-tight);
+  text-transform: uppercase;
+}
+
+/* ── Classes mirroring codebase conventions ─────────────────── */
+.font-display   { font-family: var(--font-display); }
+.font-serif     { font-family: var(--font-serif); }
+.font-cormorant { font-family: var(--font-cormorant); }
+.font-sans      { font-family: var(--font-sans); }
