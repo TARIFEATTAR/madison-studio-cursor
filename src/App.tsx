@@ -364,21 +364,28 @@ const AppContent = () => {
                     <Route path="/marketplace/shopify" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Shopify Listing"><CreateShopifyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
                     <Route path="/image-editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Editor"><ImageEditor /></RouteErrorBoundary></ProtectedRoute>} />
                     <Route path="/darkroom" element={<ProtectedRoute><RouteErrorBoundary routeName="Dark Room"><DarkRoom /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/dark-room" element={<Navigate to="/darkroom" replace />} />
                     <Route path="/best-bottles/pipeline" element={<ProtectedRoute><RouteErrorBoundary routeName="Best Bottles Pipeline"><BestBottlesPipeline /></RouteErrorBoundary></ProtectedRoute>} />
                     <Route path="/best-bottles/studio/:groupSlug" element={<ProtectedRoute><RouteErrorBoundary routeName="Best Bottles Studio"><BestBottlesStudio /></RouteErrorBoundary></ProtectedRoute>} />
                     <Route path="/light-table" element={<ProtectedRoute><RouteErrorBoundary routeName="Light Table"><LightTable /></RouteErrorBoundary></ProtectedRoute>} />
                     <Route path="/image-library" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Library"><ImageLibrary /></RouteErrorBoundary></ProtectedRoute>} />
                     <Route path="/dam" element={<ProtectedRoute><RouteErrorBoundary routeName="Asset Library"><DAMLibrary /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/assets" element={<Navigate to="/dam" replace />} />
+                    <Route path="/asset-library" element={<Navigate to="/dam" replace />} />
+                    <Route path="/vault" element={<Navigate to="/dam" replace />} />
                     <Route path="/products" element={<ProtectedRoute><RouteErrorBoundary routeName="Products"><Products /></RouteErrorBoundary></ProtectedRoute>} />
                     <Route path="/products/:productId" element={<ProtectedRoute><RouteErrorBoundary routeName="Product Hub"><ProductHub /></RouteErrorBoundary></ProtectedRoute>} />
                     <Route path="/products/:productId/edit" element={<ProtectedRoute><RouteErrorBoundary routeName="Edit Product"><ProductHub /></RouteErrorBoundary></ProtectedRoute>} />
                     <Route path="/suppliers" element={<ProtectedRoute><RouteErrorBoundary routeName="Suppliers"><Suppliers /></RouteErrorBoundary></ProtectedRoute>} />
                     {/* <Route path="/press" element={<ProtectedRoute><RouteErrorBoundary routeName="Press"><Press /></RouteErrorBoundary></ProtectedRoute>} /> */}
+                    <Route path="/archives" element={<Navigate to="/library" replace />} />
                     <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
                     <Route path="/calendar" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
                     <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
                     <Route path="/meet-madison" element={<ProtectedRoute><RouteErrorBoundary routeName="Meet Madison"><MeetMadison /></RouteErrorBoundary></ProtectedRoute>} />
                     <Route path="/help-center" element={<ProtectedRoute><RouteErrorBoundary routeName="Help Center"><HelpCenter /></RouteErrorBoundary></ProtectedRoute>} />
+                    <Route path="/help" element={<Navigate to="/help-center" replace />} />
+                    <Route path="/tutorials" element={<Navigate to="/help-center" replace />} />
                     <Route path="/think-mode" element={<ProtectedRoute><RouteErrorBoundary routeName="Think Mode"><ThinkMode /></RouteErrorBoundary></ProtectedRoute>} />
                     <Route path="/privacy" element={<PrivacyPolicy />} />
                     <Route path="/terms" element={<TermsOfService />} />
@@ -419,20 +426,27 @@ const AppContent = () => {
                 <Route path="/marketplace/shopify" element={<ProtectedRoute><EcommerceGuard><RouteErrorBoundary routeName="Create Shopify Listing"><CreateShopifyListing /></RouteErrorBoundary></EcommerceGuard></ProtectedRoute>} />
                 <Route path="/image-editor" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Editor"><ImageEditor /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/darkroom" element={<ProtectedRoute><RouteErrorBoundary routeName="Dark Room"><DarkRoom /></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="/dark-room" element={<Navigate to="/darkroom" replace />} />
                 <Route path="/best-bottles/pipeline" element={<ProtectedRoute><RouteErrorBoundary routeName="Best Bottles Pipeline"><BestBottlesPipeline /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/light-table" element={<ProtectedRoute><RouteErrorBoundary routeName="Light Table"><LightTable /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/image-library" element={<ProtectedRoute><RouteErrorBoundary routeName="Image Library"><ImageLibrary /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/dam" element={<ProtectedRoute><RouteErrorBoundary routeName="Asset Library"><DAMLibrary /></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="/assets" element={<Navigate to="/dam" replace />} />
+                <Route path="/asset-library" element={<Navigate to="/dam" replace />} />
+                <Route path="/vault" element={<Navigate to="/dam" replace />} />
                 <Route path="/products" element={<ProtectedRoute><RouteErrorBoundary routeName="Products"><Products /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/products/:productId" element={<ProtectedRoute><RouteErrorBoundary routeName="Product Hub"><ProductHub /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/products/:productId/edit" element={<ProtectedRoute><RouteErrorBoundary routeName="Edit Product"><ProductHub /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/suppliers" element={<ProtectedRoute><RouteErrorBoundary routeName="Suppliers"><Suppliers /></RouteErrorBoundary></ProtectedRoute>} />
                 {/* <Route path="/press" element={<ProtectedRoute><RouteErrorBoundary routeName="Press"><Press /></RouteErrorBoundary></ProtectedRoute>} /> */}
+                <Route path="/archives" element={<Navigate to="/library" replace />} />
                 <Route path="/schedule" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/calendar" element={<ProtectedRoute><RouteErrorBoundary routeName="Calendar"><Calendar /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><RouteErrorBoundary routeName="Settings"><Settings /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/meet-madison" element={<ProtectedRoute><RouteErrorBoundary routeName="Meet Madison"><MeetMadison /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/help-center" element={<ProtectedRoute><RouteErrorBoundary routeName="Help Center"><HelpCenter /></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="/help" element={<Navigate to="/help-center" replace />} />
+                <Route path="/tutorials" element={<Navigate to="/help-center" replace />} />
                 <Route path="/think-mode" element={<ProtectedRoute><RouteErrorBoundary routeName="Think Mode"><ThinkMode /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsOfService />} />

@@ -145,6 +145,8 @@ export default function Onboarding() {
 
     // Step 1: Brand Basics (with optional website scan)
     if (currentStep === 1) {
+      await persistBrandBasics(updatedData);
+
       // Update database with step 1 completion
       await updateOnboardingStep(3, {
         has_scanned_website: !!stepData.hasWebsiteScan,
@@ -208,7 +210,7 @@ export default function Onboarding() {
   const handleSkip = () => {
     localStorage.removeItem('madison-onboarding-progress');
     // DO NOT mark as completed when skipping
-    navigate('/library');
+    navigate('/dashboard');
   };
 
   const handleComplete = async (destination: string) => {
@@ -248,6 +250,57 @@ export default function Onboarding() {
     }
 
     navigate(destination, { replace: true });
+  };
+
+  const persistBrandBasics = async (data: any) => {
+    if (!user || !data.brandName) return;
+
+    const brandConfig = {
+      brandName: data.brandName,
+      industry: data.industry || null,
+      primaryColor: data.primaryColor || "#B8956A",
+      websiteUrl: data.websiteUrl || null,
+      industryTemplate: data.industry || "other",
+    };
+
+    try {
+      const organizationId = data.organizationId || (await supabase
+        .from("organizations")
+        .select("id")
+        .eq("created_by", user.id)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle()).data?.id;
+
+      if (!organizationId) return;
+
+      const { data: org } = await supabase
+        .from("organizations")
+        .select("brand_config")
+        .eq("id", organizationId)
+        .maybeSingle();
+
+      const existingConfig = org?.brand_config && typeof org.brand_config === "object"
+        ? org.brand_config as Record<string, unknown>
+        : {};
+
+      const { error } = await supabase
+        .from("organizations")
+        .update({
+          name: data.brandName,
+          brand_config: {
+            ...existingConfig,
+            ...brandConfig,
+          },
+        })
+        .eq("id", organizationId);
+
+      if (error) {
+        logger.error("[Onboarding] Failed to persist brand basics:", error);
+      }
+    } catch (error) {
+      logger.error("[Onboarding] Unexpected error persisting brand basics:", error);
+    }
   };
 
   if (!isValidStep) {

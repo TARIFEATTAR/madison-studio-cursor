@@ -32,16 +32,6 @@ import { cn } from "@/lib/utils";
 export function PipelineOverviewWidget() {
   const navigate = useNavigate();
   
-  // Mock data - would come from a hook in production
-  const pipelineData = {
-    idea: 3,
-    development: 5,
-    testing: 2,
-    launch: 1,
-  };
-  
-  const total = Object.values(pipelineData).reduce((a, b) => a + b, 0);
-  
   return (
     <Card className="bg-card border-border h-full flex flex-col">
       <CardHeader className="pb-2 flex-shrink-0">
@@ -51,21 +41,16 @@ export function PipelineOverviewWidget() {
             Product Pipeline
           </CardTitle>
           <Badge variant="secondary" className="text-xs">
-            {total} Products
+            Not started
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col">
-        <div className="space-y-3">
-          {Object.entries(pipelineData).map(([stage, count]) => (
-            <div key={stage} className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground w-20 capitalize">
-                {stage}
-              </span>
-              <Progress value={(count / total) * 100} className="flex-1 h-2" />
-              <span className="text-sm font-medium w-6 text-right">{count}</span>
-            </div>
-          ))}
+      <CardContent className="flex-1 flex flex-col justify-between gap-4">
+        <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4">
+          <p className="text-sm font-medium text-foreground">Add your first product</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            Product stages will appear here once your catalog has real items.
+          </p>
         </div>
         <Button 
           variant="outline" 
@@ -81,12 +66,7 @@ export function PipelineOverviewWidget() {
 }
 
 export function TeamActivityWidget() {
-  // Mock data
-  const recentActivity = [
-    { user: "Sarah", action: "Updated SDS", product: "Rose Elixir", time: "2h ago" },
-    { user: "Mike", action: "Added photos", product: "Cedar Mist", time: "4h ago" },
-    { user: "Emma", action: "Approved cert", product: "Lavender Dream", time: "1d ago" },
-  ];
+  const navigate = useNavigate();
   
   return (
     <Card className="bg-card border-border h-full flex flex-col">
@@ -96,22 +76,21 @@ export function TeamActivityWidget() {
           Team Activity
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1">
-        <div className="space-y-3">
-          {recentActivity.map((item, i) => (
-            <div key={i} className="flex items-start gap-2 text-sm">
-              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium">
-                {item.user[0]}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="truncate">
-                  <span className="font-medium">{item.user}</span> {item.action}
-                </p>
-                <p className="text-xs text-muted-foreground">{item.product} • {item.time}</p>
-              </div>
-            </div>
-          ))}
+      <CardContent className="flex-1 flex flex-col justify-between gap-4">
+        <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4">
+          <p className="text-sm font-medium text-foreground">No team activity yet</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            Invites, edits, approvals, and publishing notes will appear here.
+          </p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full mt-auto"
+          onClick={() => navigate("/settings?tab=team")}
+        >
+          Invite Team Members
+        </Button>
       </CardContent>
     </Card>
   );
@@ -427,6 +406,8 @@ export function CampaignPerformanceWidget() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function RevenueMetricsWidget() {
+  const navigate = useNavigate();
+
   return (
     <Card className="bg-card border-border h-full flex flex-col">
       <CardHeader className="pb-2 flex-shrink-0">
@@ -435,17 +416,21 @@ export function RevenueMetricsWidget() {
           Revenue Overview
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 flex items-center">
-        <div className="grid grid-cols-2 gap-4 w-full">
-          <div className="text-center p-3 rounded-lg bg-muted/50">
-            <p className="text-2xl font-bold">$24.5K</p>
-            <p className="text-xs text-muted-foreground">This Month</p>
-          </div>
-          <div className="text-center p-3 rounded-lg bg-muted/50">
-            <p className="text-2xl font-bold text-green-600">+12%</p>
-            <p className="text-xs text-muted-foreground">vs Last Month</p>
-          </div>
+      <CardContent className="flex-1 flex flex-col justify-between gap-4">
+        <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4">
+          <p className="text-sm font-medium text-foreground">Connect commerce data</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            Revenue metrics will stay hidden until a store or sales source is connected.
+          </p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full mt-auto"
+          onClick={() => navigate("/settings?tab=apps")}
+        >
+          Connect Apps
+        </Button>
       </CardContent>
     </Card>
   );

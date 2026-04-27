@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Lightbulb, FileText, PenTool, X, Send, Loader2, Upload, Search, ChevronDown, ChevronUp, BookOpen } from "lucide-react";
+import { Lightbulb, FileText, PenTool, Mail, Instagram, Sparkles } from "lucide-react";
 import { LibrarianTrigger } from "@/components/librarian";
 import { AgentSuggestion } from "@/components/agent";
 import { useAgentBehavior } from "@/hooks/useAgentBehavior";
@@ -43,6 +43,28 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { getDeliverableByValue } from "@/config/deliverableFormats";
+
+const STARTER_FORMATS = [
+  {
+    value: "instagram_post",
+    title: "Instagram Post",
+    description: "A fast first win for launches, brand moments, and product education.",
+    icon: Instagram,
+  },
+  {
+    value: "email",
+    title: "Single Email",
+    description: "A concise nurture or promo email with a clear call to action.",
+    icon: Mail,
+  },
+  {
+    value: "blog_article",
+    title: "Blog Article",
+    description: "A deeper editorial piece you can later turn into smaller assets.",
+    icon: FileText,
+  },
+];
 
 export default function Create() {
   const navigate = useNavigate();
@@ -154,6 +176,7 @@ export default function Create() {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [formatPickerOpen, setFormatPickerOpen] = useState(false);
   const [advancedOptionsOpen, setAdvancedOptionsOpen] = useState(false);
+  const selectedDeliverable = getDeliverableByValue(format);
 
   const [showThinkMode, setShowThinkMode] = useState(() => {
     const saved = localStorage.getItem('madison-show-think-mode');
@@ -780,6 +803,41 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
             )
           )}
 
+          {!format && (
+            <div className="mb-8 rounded-xl border border-brass/20 bg-white/70 p-4 md:p-5">
+              <div className="mb-4 flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-brass/10 text-brass">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-ink-black">Start with a common format</h2>
+                  <p className="mt-1 text-sm text-warm-gray">
+                    Pick one of these, or search the full deliverable library below.
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                {STARTER_FORMATS.map((starter) => {
+                  const Icon = starter.icon;
+                  return (
+                    <button
+                      key={starter.value}
+                      type="button"
+                      onClick={() => setFormat(starter.value)}
+                      className="group min-h-[112px] rounded-lg border border-warm-gray/20 bg-parchment-white p-4 text-left transition-colors hover:border-brass/50 hover:bg-brass/5"
+                    >
+                      <div className="mb-3 flex items-center gap-2 text-ink-black">
+                        <Icon className="h-4 w-4 text-brass" />
+                        <span className="font-medium">{starter.title}</span>
+                      </div>
+                      <p className="text-sm leading-5 text-warm-gray">{starter.description}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Form Container */}
           <div className="p-4 md:p-6 lg:p-8 rounded-xl border border-warm-gray/20 space-y-6 md:space-y-8 bg-parchment-white">
             {/* Brand Knowledge Status Indicator */}
@@ -824,7 +882,14 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
               </Select>
               {products.length === 0 && !productsLoading && (
                 <p className="text-xs text-brass mt-2">
-                  No products found. Add products in Settings → Products.
+                  No products yet. You can create brand-level content now, or add products in Product Hub.
+                  <button
+                    type="button"
+                    onClick={() => navigate("/products")}
+                    className="ml-1 underline underline-offset-2 hover:text-brass/80"
+                  >
+                    Add a product
+                  </button>
                 </p>
               )}
             </div>
@@ -924,7 +989,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                 className="w-full gap-2 min-h-[44px]"
               >
                 <PenTool className="w-5 h-5" />
-                <span>Generate</span>
+                <span>{selectedDeliverable ? `Generate ${selectedDeliverable.label}` : "Generate"}</span>
               </Button>
 
               <Button
@@ -946,9 +1011,9 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
 
               <p className="text-xs text-center mt-2 text-warm-gray/70">
                 {!format ? (
-                  <span className="text-brass">Select a format to continue</span>
+                  <span className="text-brass">Choose a starter format or search all formats</span>
                 ) : (
-                  "Madison will generate complete content based on your brief"
+                  `Madison will generate a complete ${selectedDeliverable?.label || "draft"} based on your brief`
                 )}
               </p>
             </div>
@@ -974,7 +1039,7 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                   size="lg"
                 >
                   <PenTool className="w-5 h-5" />
-                  <span className="text-base">Generate</span>
+                  <span className="text-base">{selectedDeliverable ? `Generate ${selectedDeliverable.label}` : "Generate"}</span>
                 </Button>
                 {showThinkMode && (
                   <button
@@ -986,9 +1051,9 @@ CRITICAL: This must be a full-length blog article of 1200-1500 words. Do not sum
                 )}
                 <p className="text-xs mt-2 text-warm-gray/70">
                   {!format ? (
-                    <span className="text-brass">Select a format to continue</span>
+                    <span className="text-brass">Choose a starter format or search all formats</span>
                   ) : (
-                    "Madison will generate complete content based on your brief"
+                    `Madison will generate a complete ${selectedDeliverable?.label || "draft"} based on your brief`
                   )}
                 </p>
               </div>

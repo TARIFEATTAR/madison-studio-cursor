@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Check, AlertCircle } from "lucide-react";
+import { Check, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 interface BrandKnowledgeIndicatorProps {
   organizationId: string | null;
@@ -60,11 +61,22 @@ export function BrandKnowledgeIndicator({ organizationId }: BrandKnowledgeIndica
 
   if (activeCount === 0) {
     return (
-      <Alert variant="default" className="mb-6 border-yellow-200 bg-yellow-50">
-        <AlertCircle className="h-4 w-4 text-yellow-600" />
-        <AlertDescription className="text-sm text-yellow-800">
-          <strong>No brand guidelines active.</strong> Madison will generate content without brand context. 
-          Upload brand documents in Settings to improve accuracy.
+      <Alert variant="default" className="mb-6 border-brass/30 bg-brass/5">
+        <Info className="h-4 w-4 text-brass" />
+        <AlertDescription className="text-sm text-ink-black">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <strong>You can create now.</strong> Add brand context later when you want Madison to match your voice more closely.
+            </div>
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="shrink-0 border-brass/30 text-brass hover:bg-brass/10"
+            >
+              <a href="/settings">Add Brand Context</a>
+            </Button>
+          </div>
         </AlertDescription>
       </Alert>
     );

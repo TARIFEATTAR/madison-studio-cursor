@@ -123,11 +123,11 @@ export function UploadZone({
     inputRef.current?.click();
   }, [disabled]);
 
-  /** When `onLibraryOpen` is set, empty state uses explicit Upload / Library actions instead of a single click target. */
+  /** Empty zone click mirrors Upload file, while the Library button stays explicit. */
   const handleZoneClick = useCallback(() => {
-    if (disabled || image || onLibraryOpen) return;
+    if (disabled || image) return;
     openFilePicker();
-  }, [disabled, image, onLibraryOpen, openFilePicker]);
+  }, [disabled, image, openFilePicker]);
 
   const handleRemove = useCallback(
     (e: React.MouseEvent) => {

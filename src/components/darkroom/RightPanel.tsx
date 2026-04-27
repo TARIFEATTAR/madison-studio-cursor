@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, type ReactNode } from "react";
 import { ImageLibraryModal } from "@/components/image-editor/ImageLibraryModal";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -26,6 +26,7 @@ import {
   ImagePlus,
   Layers,
   Sparkles,
+  Info,
 } from "lucide-react";
 import {
   LEDIndicator,
@@ -59,6 +60,12 @@ import {
   type VisualSquad,
 } from "@/config/imageSettings";
 import { ConsistencyModePanel } from "./ConsistencyMode";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Suggestion {
   id: string;
@@ -262,6 +269,28 @@ export function getCompositionPrompt(presetId: string, productCount: number): st
 }
 
 type RightPanelTab = "compose" | "settings" | "consistency";
+
+function InlineHelp({ children, side = "left" }: { children: ReactNode; side?: "top" | "right" | "bottom" | "left" }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex h-4 w-4 items-center justify-center rounded-full text-[var(--darkroom-text-dim)] hover:text-[var(--darkroom-accent)]"
+          aria-label="More information"
+        >
+          <Info className="h-3 w-3" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent
+        side={side}
+        className="max-w-[260px] border-[var(--darkroom-border)] bg-[var(--camera-body)] text-[11px] leading-relaxed text-[var(--darkroom-text)]"
+      >
+        {children}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 interface RightPanelProps {
   // Suggestions based on context
@@ -632,6 +661,9 @@ export function RightPanel({
             />
             <Cpu className="w-3 h-3 text-[var(--darkroom-accent)]" />
             <span className="text-[11px] font-medium text-[var(--darkroom-text)]">AI Model</span>
+            <InlineHelp>
+              Auto/default is safest for most users. Switch models when you need a specific rendering engine, higher fidelity, speed, or provider behavior.
+            </InlineHelp>
           </div>
           <Select
             value={proSettings.aiProvider || DEFAULT_IMAGE_AI_PROVIDER}
@@ -692,6 +724,9 @@ export function RightPanel({
             />
             <Maximize2 className="w-3 h-3 text-[var(--darkroom-accent)]" />
             <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Resolution</span>
+            <InlineHelp>
+              Standard is faster. High and 4K Ultra are better for hero images, product detail pages, and final campaign assets.
+            </InlineHelp>
           </div>
           <div className="flex gap-1">
             {IMAGE_GEN_RESOLUTION_OPTIONS.map((option) => {
@@ -731,20 +766,20 @@ export function RightPanel({
   // Generate context-aware tips
   const contextTips = [];
   if (!hasProduct) {
-    contextTips.push("Upload a product image for enhancement suggestions");
+    contextTips.push("Add a product reference when packaging needs to match exactly.");
   }
   if (hasProduct && !hasBackground) {
-    contextTips.push("Try adding a background scene for composition");
+    contextTips.push("Choose a background style or add a background scene to shape the set.");
   }
   if (hasProduct && hasBackground && !hasStyle) {
-    contextTips.push("Add a style reference for matching lighting");
+    contextTips.push("Add a style reference if lighting, finish, or mood need to match another image.");
   }
   if (proSettingsCount === 0) {
-    contextTips.push("Enable Pro Settings for camera & lighting control");
+    contextTips.push("Open Settings for camera, lighting, environment, and visual style controls.");
   }
 
   return (
-    <>
+    <TooltipProvider delayDuration={150}>
       {/* Collapsed Toggle Button */}
       <AnimatePresence>
         {isCollapsed && (
@@ -821,10 +856,10 @@ export function RightPanel({
                     ? "bg-[var(--camera-body)] text-[var(--darkroom-accent)] border border-[var(--darkroom-accent)]/20"
                     : "text-[var(--darkroom-text-dim)] hover:text-[var(--darkroom-text-muted)] hover:bg-white/[0.03]"
                 )}
-                title="Bulk variation generation — lock background, vary bottle / cap / fitment"
+                title="Bulk variation generation: lock the setup and vary product details"
               >
                 <Layers className="w-3 h-3" />
-                Set
+                Sets
               </button>
             </div>
           </div>
@@ -887,6 +922,9 @@ export function RightPanel({
                     />
                     <Camera className="w-3 h-3 text-[var(--darkroom-accent)]" />
                     <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Pro Controls</span>
+                    <InlineHelp>
+                      Pro Controls add photographic instructions to the prompt: camera style, lighting, and environment. Leave them blank when you want the model to decide.
+                    </InlineHelp>
                   </div>
                   <motion.div
                     animate={{ rotate: showHistory ? 180 : 0 }}
@@ -992,6 +1030,9 @@ export function RightPanel({
                   <LEDIndicator state={proSettings.visualSquad ? "active" : "ready"} size="sm" />
                   <Palette className="w-3 h-3 text-[var(--darkroom-accent)]" />
                   <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Visual Style</span>
+                  <InlineHelp>
+                    Visual Style gives the model a broader creative direction. Use it when a brand needs a consistent aesthetic across many shots.
+                  </InlineHelp>
                 </div>
                 <div className="grid grid-cols-2 gap-1">
                   <button
@@ -1029,6 +1070,20 @@ export function RightPanel({
           {/* === COMPOSE TAB - Multi-Product & Aspect Ratio === */}
           {activeTab === "compose" && (
             <div className="space-y-2">
+              <div className="camera-panel p-2.5 space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <LEDIndicator state="ready" size="sm" />
+                  <Wand2 className="w-3 h-3 text-[var(--darkroom-accent)]" />
+                  <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Shot Recipe</span>
+                  <InlineHelp>
+                    Compose is the normal single-image workflow. Use it to choose format, background style, arrangement, and optional composite slots before exposing a frame.
+                  </InlineHelp>
+                </div>
+                <p className="text-[10px] leading-relaxed text-[var(--darkroom-text-muted)]">
+                  Compose the image here: output quality, product slots for composites, aspect ratio, background style, and arrangement.
+                </p>
+              </div>
+
               {aiModelAndResolutionSection}
 
               {/* Context Tips */}
@@ -1036,13 +1091,14 @@ export function RightPanel({
                 <div className="camera-panel p-2.5 space-y-2 border-l-2 border-l-[var(--darkroom-accent)]">
                   <div className="flex items-center gap-1.5 mb-1">
                     <Wand2 className="w-3 h-3 text-[var(--darkroom-accent)]" />
-                    <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Scene Notes</span>
+                    <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Next Best Steps</span>
                   </div>
                   <div className="space-y-1">
                     {contextTips.map((tip, i) => (
-                      <p key={i} className="text-[10px] text-[var(--darkroom-text-muted)] leading-relaxed">
-                        "{tip}"
-                      </p>
+                      <div key={i} className="flex items-start gap-1.5 text-[10px] text-[var(--darkroom-text-muted)] leading-relaxed">
+                        <ArrowRight className="mt-0.5 h-2.5 w-2.5 flex-shrink-0 text-[var(--darkroom-accent)]" />
+                        <span>{tip}</span>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -1072,6 +1128,9 @@ export function RightPanel({
                     />
                     <Layers className="w-3 h-3 text-[var(--darkroom-accent)]" />
                     <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Product Slots</span>
+                    <InlineHelp>
+                      Product Slots are only for composite scenes with multiple products. A single hero product should usually use the Product Reference Image on the left.
+                    </InlineHelp>
                   </div>
                   <span className="text-[9px] font-mono text-[var(--darkroom-text-dim)]">
                     {productSlots?.filter(s => s.imageUrl).length || 0}/6
@@ -1098,12 +1157,15 @@ export function RightPanel({
                       <div key={index} className="relative">
                         <motion.button
                           type="button"
-                          onClick={() => !hasImage && setActiveSlotIndex(index)}
+                          onClick={() => setActiveSlotIndex(index)}
+                          disabled={isGenerating || !onProductSlotsChange}
+                          title={hasImage ? `Replace product in slot ${index + 1}` : `Add product to slot ${index + 1}`}
                           className={cn(
                             "aspect-square w-full rounded flex items-center justify-center cursor-pointer transition-all border overflow-hidden",
                             hasImage
                               ? "border-white/[0.12] bg-black"
-                              : "border-dashed border-white/[0.06] bg-[var(--camera-body-deep)] hover:border-white/[0.12] hover:bg-white/[0.03]"
+                              : "border-dashed border-white/[0.06] bg-[var(--camera-body-deep)] hover:border-white/[0.12] hover:bg-white/[0.03]",
+                            (isGenerating || !onProductSlotsChange) && "cursor-not-allowed opacity-50"
                           )}
                           whileHover={{ scale: 1.01 }}
                           whileTap={{ scale: 0.99 }}
@@ -1129,6 +1191,7 @@ export function RightPanel({
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             onClick={handleRemove}
+                            title={`Remove product from slot ${index + 1}`}
                             className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[var(--led-error)] text-white flex items-center justify-center hover:bg-red-500 transition-colors z-10"
                           >
                             <X className="w-2.5 h-2.5" />
@@ -1141,7 +1204,7 @@ export function RightPanel({
 
                 {/* Helper text */}
                 <p className="text-[9px] text-[var(--darkroom-text-dim)]">
-                  Add products to composite into scenes
+                  For multi-product scenes. For one hero product, use the Product Reference Image on the left.
                 </p>
               </div>
 
@@ -1177,6 +1240,9 @@ export function RightPanel({
                   />
                   <Aperture className="w-3 h-3 text-[var(--darkroom-accent)]" />
                   <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Aspect Ratio</span>
+                  <InlineHelp>
+                    Pick the destination format before generation. Square works for product tiles, 4:5 for feed posts, and 9:16 for stories or reels.
+                  </InlineHelp>
                 </div>
                 <div className="grid grid-cols-3 gap-1">
                   {COMMON_ASPECT_RATIOS.map((ratio) => {
@@ -1222,6 +1288,9 @@ export function RightPanel({
                     />
                     <Sparkles className="w-3 h-3 text-[var(--darkroom-accent)]" />
                     <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Background Style</span>
+                    <InlineHelp>
+                      Background Style adds a generated set direction. Use Background Scene on the left when you already have a specific set image to reuse.
+                    </InlineHelp>
                   </div>
                   {selectedBackgroundPreset && (
                     <button
@@ -1242,6 +1311,7 @@ export function RightPanel({
                         key={preset.id}
                         onClick={() => onBackgroundPresetChange?.(isSelected ? null : preset.id)}
                         disabled={isGenerating}
+                        title={`${preset.label}: ${preset.description}`}
                         className={cn(
                           "p-2 rounded text-left transition-all border group relative overflow-hidden",
                           isSelected
@@ -1282,7 +1352,7 @@ export function RightPanel({
 
                 {/* Helper text */}
                 <p className="text-[9px] text-[var(--darkroom-text-dim)] pt-1 border-t border-white/[0.04]">
-                  <span className="text-[var(--darkroom-accent)]">✦</span> Auto-varies each generation for diversity
+                  Auto-varies each generation for diversity.
                 </p>
               </div>
 
@@ -1296,6 +1366,9 @@ export function RightPanel({
                     />
                     <Layers className="w-3 h-3 text-[var(--darkroom-accent)]" />
                     <span className="text-[11px] font-medium text-[var(--darkroom-text)]">Arrangement</span>
+                    <InlineHelp>
+                      Arrangement controls where products sit in the frame. It is most useful when product references or product slots are attached.
+                    </InlineHelp>
                   </div>
                   {selectedCompositionPreset && (
                     <button
@@ -1316,6 +1389,7 @@ export function RightPanel({
                         key={preset.id}
                         onClick={() => onCompositionPresetChange?.(isSelected ? null : preset.id)}
                         disabled={isGenerating}
+                        title={`${preset.label}: ${preset.description}`}
                         className={cn(
                           "p-2 rounded text-left transition-all border group relative overflow-hidden",
                           isSelected
@@ -1356,7 +1430,7 @@ export function RightPanel({
 
                 {/* Helper text */}
                 <p className="text-[9px] text-[var(--darkroom-text-dim)] pt-1 border-t border-white/[0.04]">
-                  <span className="text-[var(--darkroom-accent)]">✦</span> Tells AI how to place products in scene
+                  Tells AI how to place products in the scene.
                 </p>
               </div>
             </div>
@@ -1374,6 +1448,6 @@ export function RightPanel({
 
         </div>
       </motion.aside>
-    </>
+    </TooltipProvider>
   );
 }

@@ -39,14 +39,146 @@ import {
 } from "@/components/darkroom/RightPanel";
 
 const SCENE_FLEXIBLE_PRESET_ID = "master-scene-flexible-2000x2200";
+const ANGLE_PRESET_ID = "master-angle-2080x2288";
+const MARKETING_PRESET_ID = "master-marketing-2080x2288";
 
 const ASPECT_RATIO_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "10:11", label: "10:11 portrait (catalog default)" },
-  { value: "1:1", label: "1:1 square (marketplace)" },
-  { value: "4:5", label: "4:5 portrait (Sanity hero)" },
+  { value: "1:1", label: "1:1 square (marketplace · IG feed)" },
+  { value: "4:5", label: "4:5 portrait (Sanity hero · IG feed)" },
+  { value: "9:16", label: "9:16 vertical (IG story · reel · TikTok)" },
   { value: "3:2", label: "3:2 landscape" },
-  { value: "16:9", label: "16:9 landscape (hero)" },
+  { value: "16:9", label: "16:9 landscape (hero · YouTube)" },
+  { value: "1.91:1", label: "1.91:1 (LinkedIn · FB link preview)" },
   { value: "21:9", label: "21:9 ultrawide (banner)" },
+];
+
+/**
+ * Camera-angle chip set for the Master · Angle preset. Each entry supplies
+ * the prompt language that gets injected as a CAMERA ANGLE block, plus an
+ * optional `referenceModifier` filename suffix the operator can use for a
+ * per-angle reference PNG (e.g. `--3qtr-left`). Without a per-angle
+ * reference, the model interprets the angle from the front-facing reference
+ * — quality varies but the bottle's identity is preserved.
+ */
+const ANGLE_VARIANTS: Array<{
+  id: string;
+  label: string;
+  icon: string;
+  promptLanguage: string;
+  referenceModifier?: string;
+}> = [
+  {
+    id: "front",
+    label: "Front",
+    icon: "▣",
+    promptLanguage:
+      "the camera sits directly in front of the bottle at eye-level (the bottle's vertical centerline meets the camera's optical axis); 85mm product lens at f/8; the front face of the bottle reads as a flat plane to the camera",
+  },
+  {
+    id: "3qtr-left",
+    label: "3/4 Left",
+    icon: "◖",
+    referenceModifier: "3qtr-left",
+    promptLanguage:
+      "the camera is rotated approximately 30° to the bottle's right (so the bottle appears rotated to the LEFT in the frame), eye-level, 85mm product lens at f/8; both the front face and the left side of the bottle are visible, revealing depth and three-dimensionality without sacrificing the front silhouette",
+  },
+  {
+    id: "3qtr-right",
+    label: "3/4 Right",
+    icon: "◗",
+    referenceModifier: "3qtr-right",
+    promptLanguage:
+      "the camera is rotated approximately 30° to the bottle's left (so the bottle appears rotated to the RIGHT in the frame), eye-level, 85mm product lens at f/8; both the front face and the right side of the bottle are visible, revealing depth and three-dimensionality without sacrificing the front silhouette",
+  },
+  {
+    id: "side-left",
+    label: "Side L",
+    icon: "◀",
+    referenceModifier: "side-left",
+    promptLanguage:
+      "pure side-profile view — the camera is rotated 90° so the bottle's left side fully faces the camera; eye-level, 85mm at f/8; the front face is no longer visible; this view reveals the bottle's depth dimension and side-profile silhouette",
+  },
+  {
+    id: "side-right",
+    label: "Side R",
+    icon: "▶",
+    referenceModifier: "side-right",
+    promptLanguage:
+      "pure side-profile view — the camera is rotated 90° so the bottle's right side fully faces the camera; eye-level, 85mm at f/8; the front face is no longer visible; this view reveals the bottle's depth dimension and side-profile silhouette",
+  },
+  {
+    id: "back",
+    label: "Back",
+    icon: "▢",
+    referenceModifier: "back",
+    promptLanguage:
+      "rear view — the camera is positioned directly behind the bottle, eye-level, 85mm at f/8; the back of the bottle faces the camera; do not show the front face",
+  },
+  {
+    id: "low-hero",
+    label: "Low Hero",
+    icon: "▲",
+    promptLanguage:
+      "low-angle hero shot — the camera sits approximately 15° below the bottle's mid-height looking up; the bottle reads as monumental and elevated; the cap and shoulder dominate; the base is foreshortened slightly; 85mm at f/8 to maintain product-photography proportions (no ultrawide distortion)",
+  },
+  {
+    id: "high-down",
+    label: "High Down",
+    icon: "▼",
+    promptLanguage:
+      "elevated high-angle view — the camera sits approximately 25° above the bottle's mid-height looking down; the cap and shoulder are foreshortened; the base reads larger; 85mm at f/8 to maintain product-photography proportions",
+  },
+  {
+    id: "top-down",
+    label: "Top Down",
+    icon: "○",
+    referenceModifier: "top-down",
+    promptLanguage:
+      "pure top-down flat-lay view — the camera looks straight down at the bottle from directly above; the cap reads as the dominant element (a circle or cap-shape silhouette); the bottle's body is foreshortened to its cross-section silhouette; 85mm at f/8; the bottle rests on the parchment plate which fills the frame",
+  },
+];
+
+/**
+ * Marketing-layout chip set for the Master · Marketing preset. Maps onto the
+ * `MarketingLayout` union in promptAssembler.ts.
+ */
+const MARKETING_LAYOUT_OPTIONS: Array<{
+  id: "left-third" | "right-third" | "lower-banner" | "upper-banner" | "centered-overlay";
+  label: string;
+  icon: string;
+  description: string;
+}> = [
+  {
+    id: "left-third",
+    label: "Left Third",
+    icon: "◧",
+    description: "Bottle right · copy left third",
+  },
+  {
+    id: "right-third",
+    label: "Right Third",
+    icon: "◨",
+    description: "Bottle left · copy right third",
+  },
+  {
+    id: "lower-banner",
+    label: "Lower Banner",
+    icon: "▁",
+    description: "Bottle upper · copy lower band",
+  },
+  {
+    id: "upper-banner",
+    label: "Upper Banner",
+    icon: "▔",
+    description: "Copy upper band · bottle lower",
+  },
+  {
+    id: "centered-overlay",
+    label: "Overlay",
+    icon: "◉",
+    description: "Copy overlaid in negative space",
+  },
 ];
 
 // Masters tab generates full catalog scenes (bottle + fitment + cap), so the
@@ -59,6 +191,9 @@ import {
   assemblePrompt,
   type AssembledPrompt,
   type LiquidSpec,
+  type CameraAngleSpec,
+  type MarketingCopySpec,
+  type MarketingLayout,
 } from "@/lib/product-image/promptAssembler";
 import type { Product } from "@/integrations/convex/bestBottles";
 import {
@@ -164,6 +299,28 @@ export function MastersTabPanel({
   const [sceneAspectRatio, setSceneAspectRatio] = useState<string>("10:11");
   const [sceneResolution, setSceneResolution] = useState<"standard" | "high">("standard");
   const isSceneFlexible = presetId === SCENE_FLEXIBLE_PRESET_ID;
+  const isAngles = presetId === ANGLE_PRESET_ID;
+  const isMarketing = presetId === MARKETING_PRESET_ID;
+  // Aspect / resolution overlay surfaces for any of the three flexible
+  // presets. Catalog presets stay locked at the preset's canonical ratio.
+  const hasFlexibleOverlay = isSceneFlexible || isAngles || isMarketing;
+
+  // Camera-angle chip — only consulted when isAngles. Default front so the
+  // first generation matches the front-facing reference faithfully.
+  const [selectedAngleId, setSelectedAngleId] = useState<string>("front");
+  const selectedAngleVariant = useMemo(
+    () => ANGLE_VARIANTS.find((a) => a.id === selectedAngleId) ?? ANGLE_VARIANTS[0],
+    [selectedAngleId],
+  );
+
+  // Marketing copy fields — only consulted when isMarketing. Layout default
+  // is left-third (bottle right, copy left) which is the most common
+  // editorial campaign layout.
+  const [marketingLayoutId, setMarketingLayoutId] = useState<MarketingLayout>("left-third");
+  const [marketingHeadline, setMarketingHeadline] = useState("");
+  const [marketingSubhead, setMarketingSubhead] = useState("");
+  const [marketingCta, setMarketingCta] = useState("");
+  const [marketingVoiceCue, setMarketingVoiceCue] = useState("editorial luxury, restrained, considered");
 
   // Manual reference image override — bypasses Convex's legacy .gif imageUrl
   // (which OpenAI /edits rejects). Drop a PSD-rendered PNG here to anchor
@@ -200,13 +357,21 @@ export function MastersTabPanel({
    * registered modifier (e.g. "exploded"), prefer the variant key first and
    * fall back to the plain Grace SKU. Centralized so the effect, the memo,
    * and clearCustomReference all agree on the lookup rule.
+   *
+   * When the angle preset is active, the modifier comes from the selected
+   * angle chip (e.g. `3qtr-left`) rather than a preset-wide entry — so each
+   * chip can pull its own per-angle reference if the operator has supplied
+   * one. Falls back to the bare Grace SKU when no per-angle PNG is present.
    */
   const lookupFolderReference = (
     sku: Product,
     preset: string,
   ): FolderReferenceEntry | null => {
     const baseKey = folderKey(sku.graceSku);
-    const modifier = PRESET_MODIFIER[preset];
+    let modifier = PRESET_MODIFIER[preset];
+    if (preset === ANGLE_PRESET_ID && selectedAngleVariant.referenceModifier) {
+      modifier = selectedAngleVariant.referenceModifier;
+    }
     if (modifier) {
       const variant = referenceFolder.get(folderKey(sku.graceSku, modifier));
       if (variant) return variant;
@@ -229,8 +394,10 @@ export function MastersTabPanel({
     } else {
       setCustomReference(null);
     }
+    // selectedAngleId is in the dep list so picking a new angle chip re-runs
+    // the lookup against the angle's own modifier suffix (3qtr-left, side, etc.).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProduct, presetId, referenceFolder, folderUserOverride]);
+  }, [selectedProduct, presetId, referenceFolder, folderUserOverride, selectedAngleId]);
 
   /**
    * Upload a folder of PSD-rendered PNGs. Each filename is treated as the
@@ -347,7 +514,7 @@ export function MastersTabPanel({
     if (!selectedProduct || referenceFolder.size === 0) return null;
     return lookupFolderReference(selectedProduct, presetId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProduct, presetId, referenceFolder]);
+  }, [selectedProduct, presetId, referenceFolder, selectedAngleId]);
 
   /**
    * Coverage diagnostics — most "why isn't this matching" questions trace to
@@ -499,32 +666,77 @@ export function MastersTabPanel({
     const liquid: LiquidSpec | null = liquidEnabled
       ? { present: true, color: liquidColor, fillPercent: liquidFill }
       : null;
-    const assembled = assemblePrompt({ presetId, sku, liquid });
 
-    // Build scene overlay only when the scene-flexible preset is active.
-    // The chip's curated variation gets randomized at submit-time so two
-    // back-to-back generations with the same chip yield different scenes.
+    // Camera-angle injection — only for the Master · Angle preset. Front
+    // angle is omitted from the prompt because it's the assembler's default;
+    // any other chip injects a CAMERA ANGLE OVERRIDE block.
+    const cameraAngle: CameraAngleSpec | null =
+      isAngles && selectedAngleVariant.id !== "front"
+        ? {
+            id: selectedAngleVariant.id,
+            label: selectedAngleVariant.label,
+            promptLanguage: selectedAngleVariant.promptLanguage,
+            referenceModifier: selectedAngleVariant.referenceModifier,
+          }
+        : null;
+
+    // Marketing-copy injection — only for the Master · Marketing preset, and
+    // only when at least a headline is supplied. Empty fields are skipped so
+    // the operator can iterate on copy without re-typing every line.
+    const marketingCopy: MarketingCopySpec | null =
+      isMarketing && marketingHeadline.trim().length > 0
+        ? {
+            headline: marketingHeadline.trim(),
+            subhead: marketingSubhead.trim() || undefined,
+            cta: marketingCta.trim() || undefined,
+            layout: marketingLayoutId,
+            voiceCue: marketingVoiceCue.trim() || undefined,
+          }
+        : null;
+
+    const assembled = assemblePrompt({
+      presetId,
+      sku,
+      liquid,
+      cameraAngle,
+      marketingCopy,
+    });
+
+    // Scene / aspect / resolution overlay surfaces for any of the three
+    // flexible presets. Background prompt is consulted only for scene-
+    // flexible and marketing (angles inherits the canonical cream plate).
     let sceneOverlay: AssembledGenerateOptions["sceneOverlay"];
     let sceneTags: string[] = [];
-    if (isSceneFlexible) {
-      const chipVariation = sceneBackgroundPresetId
-        ? getRandomBackgroundVariation(sceneBackgroundPresetId)
-        : null;
-      // Operator-typed text takes precedence over the chip's variation;
-      // chip is the quick-start, textarea is the override.
-      const finalBackgroundPrompt =
-        sceneBackgroundPrompt.trim().length > 0
+    if (hasFlexibleOverlay) {
+      const allowsBackgroundOverride = isSceneFlexible || isMarketing;
+      const chipVariation =
+        allowsBackgroundOverride && sceneBackgroundPresetId
+          ? getRandomBackgroundVariation(sceneBackgroundPresetId)
+          : null;
+      const finalBackgroundPrompt = allowsBackgroundOverride
+        ? sceneBackgroundPrompt.trim().length > 0
           ? sceneBackgroundPrompt.trim()
-          : chipVariation;
+          : chipVariation
+        : null;
       sceneOverlay = {
-        backgroundPresetId: sceneBackgroundPresetId,
+        backgroundPresetId: allowsBackgroundOverride ? sceneBackgroundPresetId : null,
         backgroundPrompt: finalBackgroundPrompt,
         aspectRatioOverride: sceneAspectRatio,
         resolutionOverride: sceneResolution,
       };
+      const variantTag = isSceneFlexible
+        ? "scene-flexible"
+        : isAngles
+          ? "angle"
+          : "marketing";
       sceneTags = [
-        "scene-flexible",
-        sceneBackgroundPresetId ? `bg:${sceneBackgroundPresetId}` : null,
+        variantTag,
+        allowsBackgroundOverride && sceneBackgroundPresetId
+          ? `bg:${sceneBackgroundPresetId}`
+          : null,
+        isAngles ? `angle:${selectedAngleVariant.id}` : null,
+        isMarketing ? `layout:${marketingLayoutId}` : null,
+        isMarketing && marketingCopy ? "ad-creative" : null,
         `aspect:${sceneAspectRatio}`,
         `res:${sceneResolution}`,
       ].filter((t): t is string => Boolean(t));
@@ -577,7 +789,7 @@ export function MastersTabPanel({
     if (!familyVariants || referenceFolder.size === 0) return [];
     return familyVariants.filter((v) => lookupFolderReference(v, presetId) !== null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [familyVariants, referenceFolder, presetId]);
+  }, [familyVariants, referenceFolder, presetId, selectedAngleId]);
 
   /**
    * Batch-generate masters for every SKU in the family that has a folder

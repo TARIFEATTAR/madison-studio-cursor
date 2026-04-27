@@ -57,7 +57,7 @@ export function useDashboardStats() {
         piecesCreatedThisWeek: 0,
         piecesPublished: 0,
         piecesScheduled: 0,
-        onBrandScore: 95,
+        onBrandScore: 0,
         streakDays: 0,
         recentActivity: [],
         totalDrafts: 0,

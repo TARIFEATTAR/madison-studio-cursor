@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, ImagePlus, X } from "lucide-react";
+import { Check, ChevronDown, ImagePlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ImageLibraryModal } from "@/components/image-editor/ImageLibraryModal";
@@ -36,6 +36,45 @@ interface VariationMatrixProps {
 
 const MAX_REFERENCE_MB = 10;
 
+type OptionGroup = {
+  id: string;
+  label: string;
+  helper: string;
+  options: VariationOption[];
+};
+
+function getCapGroup(option: VariationOption): Pick<OptionGroup, "id" | "label" | "helper"> {
+  if (option.id.includes("dots")) {
+    return { id: "decorated", label: "Decorated", helper: "rhinestone + patterned" };
+  }
+  if (option.id.includes("silver") || option.id.includes("gold") || option.id.includes("copper")) {
+    return { id: "metallic", label: "Metallic-look", helper: "silver, gold, copper" };
+  }
+  if (option.id.includes("wood")) {
+    return { id: "natural", label: "Natural", helper: "wood + specialty" };
+  }
+  return { id: "solid", label: "Solid colors", helper: "black, white, color" };
+}
+
+function groupCapOptions(options: VariationOption[]): OptionGroup[] {
+  const order = ["solid", "metallic", "decorated", "natural"];
+  const groups = new Map<string, OptionGroup>();
+
+  for (const option of options) {
+    const group = getCapGroup(option);
+    const existing = groups.get(group.id);
+    if (existing) {
+      existing.options.push(option);
+    } else {
+      groups.set(group.id, { ...group, options: [option] });
+    }
+  }
+
+  return order
+    .map((id) => groups.get(id))
+    .filter((group): group is OptionGroup => Boolean(group));
+}
+
 /**
  * Three-axis chip grid for picking bottle/cap/fitment variations.
  *
@@ -52,8 +91,28 @@ export function VariationMatrix({
   onRemoveReference,
   disabled = false,
 }: VariationMatrixProps) {
+  const [openAxes, setOpenAxes] = useState<Record<VariationAxis, boolean>>({
+    bottleColor: true,
+    capColor: false,
+    fitmentType: false,
+  });
+  const [openFitmentGroups, setOpenFitmentGroups] = useState<Record<string, boolean>>({});
+  const [openCapGroups, setOpenCapGroups] = useState<Record<string, boolean>>({});
+
+  const toggleAxis = (axisId: VariationAxis) => {
+    setOpenAxes((prev) => ({ ...prev, [axisId]: !prev[axisId] }));
+  };
+
+  const toggleFitmentGroup = (category: string) => {
+    setOpenFitmentGroups((prev) => ({ ...prev, [category]: !prev[category] }));
+  };
+
+  const toggleCapGroup = (category: string) => {
+    setOpenCapGroups((prev) => ({ ...prev, [category]: !prev[category] }));
+  };
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {VARIATION_AXES.map((axis, axisIdx) => {
         // Cap axis soft-gate: if the user has chosen one or more fitments,
         // only show caps that are actually offered with those fitments in
@@ -68,82 +127,206 @@ export function VariationMatrix({
           axis.id === "capColor" &&
           selectedFitmentIds.length > 0 &&
           options.length < axis.options.length;
+        const selectedOptions = selection[axis.id];
+        const isOpen = openAxes[axis.id];
+        const summary =
+          selectedOptions.length > 0
+            ? selectedOptions.map((option) => option.label).join(", ")
+            : "No change selected";
+
         return (
           <div
             key={axis.id}
             className={cn(
-              "space-y-1.5",
-              axisIdx > 0 && "pt-3 border-t border-white/[0.04]",
+              "rounded-md border border-white/[0.06] bg-black/20",
+              axisIdx > 0 && "mt-2",
             )}
           >
-            <div>
-              <div className="text-[10px] font-mono uppercase tracking-wider text-[var(--darkroom-text-muted)]">
-                {axis.label}
+            <button
+              type="button"
+              onClick={() => toggleAxis(axis.id)}
+              className="flex w-full items-center justify-between gap-2 p-2 text-left"
+              aria-expanded={isOpen}
+            >
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--darkroom-text-muted)]">
+                    {axis.label}
+                  </span>
+                  <span
+                    className={cn(
+                      "rounded border px-1.5 py-0.5 text-[8px] font-mono uppercase tracking-wider",
+                      selectedOptions.length > 0
+                        ? "border-[var(--darkroom-accent)]/35 bg-[var(--darkroom-accent)]/10 text-[var(--darkroom-accent)]"
+                        : "border-white/[0.06] bg-white/[0.03] text-[var(--darkroom-text-dim)]",
+                    )}
+                  >
+                    {selectedOptions.length || 0} selected
+                  </span>
+                </div>
+                <p className="mt-1 truncate text-[9px] text-[var(--darkroom-text-dim)]">
+                  {summary}
+                </p>
               </div>
-              <p className="text-[9px] text-[var(--darkroom-text-dim)] mt-0.5">
-                {axis.helper}
-                {gated
-                  ? ` · showing ${options.length}/${axis.options.length} offered with your fitment`
-                  : ""}
-              </p>
-            </div>
-            {axis.id === "fitmentType" ? (
-              // Fitments: bucket by category (Sprayers / Rollers / Pumps /
-              // Droppers / Stoppers / Caps). A flat list of 13 options is
-              // fatiguing to scan; small section headers let the operator
-              // jump straight to the shape family they need.
-              <div className="space-y-2">
-                {groupFitmentsByCategory(options).map((group) => (
-                  <div key={group.category} className="space-y-1">
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-[9px] font-mono uppercase tracking-wider text-[var(--darkroom-text-dim)]">
-                        {group.label}
-                      </span>
-                      <span className="text-[8px] text-[var(--darkroom-text-dim)]/70">
-                        · {group.helper}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {group.options.map((option) => {
-                        const isSelected = selection[axis.id].some(
-                          (o) => o.id === option.id,
-                        );
-                        const attachedRef = materialReferences[option.id];
-                        return (
-                          <VariationChip
-                            key={option.id}
-                            option={option}
-                            isSelected={isSelected}
-                            attachedRef={attachedRef}
-                            disabled={disabled}
-                            onToggle={() => onToggle(axis.id, option)}
-                            onAttach={(ref) => onAttachReference(option.id, ref)}
-                            onRemove={() => onRemoveReference(option.id)}
-                          />
-                        );
-                      })}
-                    </div>
+              <ChevronDown
+                className={cn(
+                  "h-3.5 w-3.5 flex-shrink-0 text-[var(--darkroom-text-dim)] transition-transform",
+                  isOpen && "rotate-180",
+                )}
+              />
+            </button>
+
+            {isOpen && (
+              <div className="space-y-2 border-t border-white/[0.04] p-2 pt-2.5">
+                <p className="text-[9px] text-[var(--darkroom-text-dim)]">
+                  {axis.helper}
+                  {gated
+                    ? ` · showing ${options.length}/${axis.options.length} offered with your fitment`
+                    : ""}
+                </p>
+
+                {axis.id === "fitmentType" ? (
+                  <div className="space-y-1.5">
+                    {groupFitmentsByCategory(options).map((group) => {
+                      const groupSelectionCount = group.options.filter((option) =>
+                        selection[axis.id].some((selected) => selected.id === option.id),
+                      ).length;
+                      const groupOpen =
+                        openFitmentGroups[group.category] || groupSelectionCount > 0;
+
+                      return (
+                        <div
+                          key={group.category}
+                          className="rounded border border-white/[0.04] bg-[var(--camera-body-deep)]/40"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => toggleFitmentGroup(group.category)}
+                            className="flex w-full items-center justify-between gap-2 px-2 py-1.5 text-left"
+                            aria-expanded={groupOpen}
+                          >
+                            <span className="text-[9px] font-mono uppercase tracking-wider text-[var(--darkroom-text-muted)]">
+                              {group.label}
+                            </span>
+                            <span className="ml-auto text-[8px] text-[var(--darkroom-text-dim)]">
+                              {groupSelectionCount > 0
+                                ? `${groupSelectionCount} selected`
+                                : group.helper}
+                            </span>
+                            <ChevronDown
+                              className={cn(
+                                "h-3 w-3 flex-shrink-0 text-[var(--darkroom-text-dim)] transition-transform",
+                                groupOpen && "rotate-180",
+                              )}
+                            />
+                          </button>
+                          {groupOpen && (
+                            <div className="flex flex-wrap gap-1 border-t border-white/[0.04] p-2">
+                              {group.options.map((option) => {
+                                const isSelected = selection[axis.id].some(
+                                  (o) => o.id === option.id,
+                                );
+                                const attachedRef = materialReferences[option.id];
+                                return (
+                                  <VariationChip
+                                    key={option.id}
+                                    option={option}
+                                    isSelected={isSelected}
+                                    attachedRef={attachedRef}
+                                    disabled={disabled}
+                                    onToggle={() => onToggle(axis.id, option)}
+                                    onAttach={(ref) => onAttachReference(option.id, ref)}
+                                    onRemove={() => onRemoveReference(option.id)}
+                                  />
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-1">
-                {options.map((option) => {
-                  const isSelected = selection[axis.id].some((o) => o.id === option.id);
-                  const attachedRef = materialReferences[option.id];
-                  return (
-                    <VariationChip
-                      key={option.id}
-                      option={option}
-                      isSelected={isSelected}
-                      attachedRef={attachedRef}
-                      disabled={disabled}
-                      onToggle={() => onToggle(axis.id, option)}
-                      onAttach={(ref) => onAttachReference(option.id, ref)}
-                      onRemove={() => onRemoveReference(option.id)}
-                    />
-                  );
-                })}
+                ) : axis.id === "capColor" ? (
+                  <div className="space-y-1.5">
+                    {groupCapOptions(options).map((group) => {
+                      const groupSelectionCount = group.options.filter((option) =>
+                        selection[axis.id].some((selected) => selected.id === option.id),
+                      ).length;
+                      const groupOpen =
+                        openCapGroups[group.id] || groupSelectionCount > 0;
+
+                      return (
+                        <div
+                          key={group.id}
+                          className="rounded border border-white/[0.04] bg-[var(--camera-body-deep)]/40"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => toggleCapGroup(group.id)}
+                            className="flex w-full items-center justify-between gap-2 px-2 py-1.5 text-left"
+                            aria-expanded={groupOpen}
+                          >
+                            <span className="text-[9px] font-mono uppercase tracking-wider text-[var(--darkroom-text-muted)]">
+                              {group.label}
+                            </span>
+                            <span className="ml-auto text-[8px] text-[var(--darkroom-text-dim)]">
+                              {groupSelectionCount > 0
+                                ? `${groupSelectionCount} selected`
+                                : group.helper}
+                            </span>
+                            <ChevronDown
+                              className={cn(
+                                "h-3 w-3 flex-shrink-0 text-[var(--darkroom-text-dim)] transition-transform",
+                                groupOpen && "rotate-180",
+                              )}
+                            />
+                          </button>
+                          {groupOpen && (
+                            <div className="flex flex-wrap gap-1 border-t border-white/[0.04] p-2">
+                              {group.options.map((option) => {
+                                const isSelected = selection[axis.id].some(
+                                  (o) => o.id === option.id,
+                                );
+                                const attachedRef = materialReferences[option.id];
+                                return (
+                                  <VariationChip
+                                    key={option.id}
+                                    option={option}
+                                    isSelected={isSelected}
+                                    attachedRef={attachedRef}
+                                    disabled={disabled}
+                                    onToggle={() => onToggle(axis.id, option)}
+                                    onAttach={(ref) => onAttachReference(option.id, ref)}
+                                    onRemove={() => onRemoveReference(option.id)}
+                                  />
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-1">
+                    {options.map((option) => {
+                      const isSelected = selection[axis.id].some((o) => o.id === option.id);
+                      const attachedRef = materialReferences[option.id];
+                      return (
+                        <VariationChip
+                          key={option.id}
+                          option={option}
+                          isSelected={isSelected}
+                          attachedRef={attachedRef}
+                          disabled={disabled}
+                          onToggle={() => onToggle(axis.id, option)}
+                          onAttach={(ref) => onAttachReference(option.id, ref)}
+                          onRemove={() => onRemoveReference(option.id)}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>

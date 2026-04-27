@@ -271,7 +271,7 @@
    ----------------------------------------------------------------------------- */
 .dark-room-grid {
   display: grid;
-  grid-template-columns: 280px 1fr auto;
+  grid-template-columns: 260px minmax(0, 1fr) auto;
   gap: 0;
   height: calc(100vh - 44px);
   overflow: hidden;
@@ -279,8 +279,14 @@
 
 /* Responsive: Tablet */
 @media (max-width: 1280px) {
+  .right-panel {
+    min-width: 244px;
+    max-width: 256px;
+    width: 252px;
+  }
+
   .dark-room-grid {
-    grid-template-columns: 260px 1fr auto;
+    grid-template-columns: 240px minmax(0, 1fr) auto;
   }
 }
 
@@ -298,8 +304,8 @@
 .left-rail {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
-  padding: var(--space-md);
+  gap: 10px;
+  padding: 10px;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(8, 8, 8, 0.95);
   overflow-y: auto;
@@ -332,7 +338,7 @@
 .left-rail__section {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: 6px;
 }
 
 .left-rail__section-title {
@@ -371,6 +377,10 @@
   margin-bottom: var(--space-lg);
 }
 
+.upload-zone-container--compact {
+  margin-bottom: 0;
+}
+
 .upload-zone-wrapper {
   margin-bottom: var(--space-md);
 }
@@ -391,7 +401,7 @@
 .upload-zone {
   position: relative;
   width: 100%;
-  min-height: 248px;
+  min-height: 220px;
   border: 1px solid var(--darkroom-border);
   border-radius: var(--radius-md);
   background: var(--camera-body-deep);
@@ -405,6 +415,34 @@
   box-shadow: 
     inset 0 1px 3px rgba(0, 0, 0, 0.4),
     inset 0 -1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.upload-zone-container--compact .upload-zone {
+  min-height: 164px;
+}
+
+.upload-zone-container--compact .upload-empty {
+  gap: var(--space-sm);
+  padding: var(--space-lg) var(--space-md);
+}
+
+.upload-zone-container--compact .upload-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.upload-zone-container--compact .upload-text {
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+.upload-zone-container--compact .upload-description {
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.upload-zone-container--compact .upload-empty__actions {
+  margin-top: var(--space-sm);
 }
 
 /* Corner brackets for viewfinder feel */
@@ -1940,7 +1978,7 @@
 
 /* Film Strip Container - Enhanced glossy dark aesthetic */
 .film-strip-container {
-  padding: var(--space-lg) var(--space-lg);
+  padding: 12px var(--space-lg);
   background: 
     linear-gradient(
       180deg,
@@ -1987,7 +2025,7 @@
 }
 
 .carousel-header {
-  margin-bottom: var(--space-md);
+  margin-bottom: 8px;
   text-align: center;
   display: flex;
   justify-content: center;
@@ -2006,7 +2044,7 @@
   letter-spacing: 0.12em;
   font-family: var(--lcd-font);
   text-shadow: var(--lcd-glow);
-  padding: 6px 14px;
+  padding: 5px 12px;
   background: rgba(0, 255, 102, 0.06);
   border: 1px solid rgba(0, 255, 102, 0.2);
   border-radius: 6px;
@@ -2024,7 +2062,7 @@
 /* Film Strip Layout - Premium glossy container */
 .film-strip {
   display: grid;
-  grid-template-columns: 24px 1fr 24px;
+  grid-template-columns: 20px 1fr 20px;
   gap: 0;
   background: 
     linear-gradient(
@@ -2033,7 +2071,7 @@
       rgba(6, 6, 6, 1) 40%,
       rgba(4, 4, 4, 1) 100%
     );
-  padding: 14px 0;
+  padding: 10px 0;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   position: relative;
@@ -2086,8 +2124,20 @@
 .film-frames {
   display: grid;
   grid-template-columns: repeat(10, 1fr);
-  gap: 8px;
-  padding: 0 8px;
+  gap: 6px;
+  padding: 0 6px;
+}
+
+.film-strip-container--empty {
+  padding: 9px var(--space-lg) 10px;
+}
+
+.film-strip-container--empty .carousel-header {
+  margin-bottom: 0;
+}
+
+.film-strip-container--empty .film-strip {
+  display: none;
 }
 
 /* Individual Film Frame */
@@ -2500,8 +2550,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px var(--space-md) 10px;
+  gap: 6px;
+  padding: 10px var(--space-md) 8px;
   background: var(--camera-body);
   background-image: var(--camera-body-gloss);
   border-top: 1px solid var(--darkroom-border);
@@ -2598,7 +2648,7 @@
   display: flex;
   align-items: stretch;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
   min-width: 0;
 }
@@ -2705,10 +2755,10 @@
 /* Tall variant — the brief-sized prompt. Shows 3+ lines by default so
    long creative prompts don't get clipped into a single row. */
 .prompt-input--tall {
-  min-height: 96px;
-  max-height: 220px;
-  padding: 14px var(--space-md);
-  font-size: 14px;
+  min-height: 72px;
+  max-height: 180px;
+  padding: 12px var(--space-md);
+  font-size: 13px;
   line-height: 1.55;
 }
 
@@ -2811,9 +2861,9 @@
   border-left: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(8, 8, 8, 0.95);
   overflow: hidden;
-  min-width: 260px;
-  max-width: 280px;
-  width: 270px;
+  min-width: 252px;
+  max-width: 268px;
+  width: 260px;
   transition: all 0.2s ease-in-out;
   margin-left: auto;
   position: relative;
@@ -2955,7 +3005,7 @@
 .right-panel__content {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-md);
+  padding: 10px;
 }
 
 /* Panel Sections */

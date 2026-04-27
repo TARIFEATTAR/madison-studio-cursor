@@ -225,7 +225,7 @@ export function ThumbnailCarousel({
   const savedCount = images.filter((img) => img.isSaved).length;
 
   return (
-    <div className="film-strip-container">
+    <div className={cn("film-strip-container", images.length === 0 && "film-strip-container--empty")}>
       {/* Progress Indicator */}
       <div className="carousel-header">
         <span className="carousel-progress">

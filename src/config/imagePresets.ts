@@ -390,6 +390,91 @@ export const MASTER_SCENE_FLEXIBLE_2000X2200: ImagePreset = {
     "no label, no text, no badge, no watermark, no brand name, no secondary product, no hands, no spray mist; no chrome-CGI sheen on plastic caps; no transparent or checkerboard background; no broad central reflection stripe on the glass body; no shadow cast to the left or back-left; no cool/blue light unless the scene overlay calls for it, no daylight-noon flat lighting unless explicit, no rim light, no backlight haze; no Aesop bottles, no Aesop labels, no Aesop product silhouettes; no Kinfolk magazine page chrome; no other brand's bottle shapes — the subject is the Best Bottles bottle from the reference image only",
 };
 
+/**
+ * Angle-flexible variant of the Grid Card. Same canvas + same product spec +
+ * same MANDATORY DIMENSIONS as the canonical 10:11 master, but the operator
+ * picks a camera angle (front / 3/4 / side / top-down / hero-low) per
+ * generation via the chip strip in the Masters tab. The selected angle is
+ * injected as a CAMERA ANGLE block by the prompt assembler.
+ *
+ * Important caveat — the front-facing PSD-rendered reference image fights
+ * non-front angles. Two paths to handle this:
+ *   1. Operator drops a per-angle reference PNG into the folder using the
+ *      `--<angle-modifier>` filename suffix (e.g.
+ *      `GB-EMP-CLR-100ML-BST-BLK--3qtr-left.png`). Auto-match picks it up.
+ *   2. With only the front-facing reference, the model interprets the angle
+ *      from prompt language alone — quality varies but identity is preserved.
+ *
+ * Negative language stays close to the canonical Grid Card; only the
+ * "front-facing eye-level" framing assumption from the global CONSTRAINT
+ * block is overridden by the per-generation CAMERA ANGLE directive.
+ */
+export const MASTER_ANGLE_2080X2288: ImagePreset = {
+  id: "master-angle-2080x2288",
+  label: "Master · Angle · 2080 × 2288",
+  purpose:
+    "Per-angle variants of an approved master (3/4, side profile, low-hero, top-down). Preserves the canonical bottle identity while letting the operator pivot the camera per generation. Best paired with a per-angle reference PNG (filename suffix `--3qtr-left`, `--side-left`, etc.) when fidelity matters.",
+  kind: "final_render",
+  canvas: { widthPx: 2080, heightPx: 2288 },
+  aspectRatio: "10:11",
+  orientation: "portrait",
+  backgroundHex: "#EEE6D4",
+  backgroundDescription: PARCHMENT_BACKGROUND_DESCRIPTION,
+  lightingLanguage: SHARED_LIGHTING_LANGUAGE,
+  shadowLanguage:
+    "soft contact shadow whose direction is dictated by the chosen camera angle's implied key-light position; 25–30% opacity at the densest point closest to the bottle base, fading to ~5% at the tip; soft penumbra throughout; no overhead-flat shadow directly beneath the bottle, no double shadow, no harsh edge",
+  // Composition is intentionally minimal here — the per-generation CAMERA
+  // ANGLE block (built by promptAssembler.buildCameraAngleBlock) supplies
+  // the framing language that overrides the default front-facing assumption.
+  compositionLanguage:
+    "framing dictated by the operator's CAMERA ANGLE block below; product fills approximately 60–72% of the vertical canvas height with generous padding so the full assembly remains visible regardless of the chosen angle",
+  qualityLanguage: SHARED_QUALITY_LANGUAGE,
+  negativeLanguage: SHARED_NEGATIVE_LANGUAGE,
+};
+
+/**
+ * Marketing / ad-creative variant. Same product-spec lock as the canonical
+ * Grid Card, but with two deliberate departures:
+ *
+ *   1. The negative language ALLOWS typeset copy (headline / subhead / CTA)
+ *      laid into the canvas's negative space. Labels on the bottle itself
+ *      remain banned — this is layout text, not packaging text.
+ *   2. The aspect ratio overlay (1:1 / 4:5 / 16:9 / 9:16 / 1.91:1) is
+ *      designed to be swapped per generation so a single approved master
+ *      can spawn a full ad set across Instagram feed / story / reel /
+ *      Facebook / LinkedIn / web banner without leaving the panel.
+ *
+ * Leverages gpt-image-2's text-rendering capability — the model produces
+ * crisp, kerned, brand-appropriate letterforms when given a clear typesetting
+ * directive. The Marketing block in promptAssembler.buildMarketingCopyBlock
+ * supplies the typeset directive plus layout guidance.
+ */
+export const MASTER_MARKETING_2080X2288: ImagePreset = {
+  id: "master-marketing-2080x2288",
+  label: "Master · Marketing · 2080 × 2288",
+  purpose:
+    "Ad creatives, social posts, and editorial layouts that combine the canonical bottle with typeset copy (headline, subhead, optional CTA). Aspect ratio is meant to be overridden per generation so one master spawns a full social/ad set.",
+  kind: "final_render",
+  canvas: { widthPx: 2080, heightPx: 2288 },
+  aspectRatio: "10:11",
+  orientation: "portrait",
+  backgroundHex: "#EEE6D4",
+  backgroundDescription:
+    "background dictated by the operator's marketing layout block — defaults to the parchment-cream plate (#EEE6D4) when no scene override is set, otherwise honors the BACKGROUND STYLE block",
+  lightingLanguage: SHARED_LIGHTING_LANGUAGE,
+  shadowLanguage: SHARED_SHADOW_LANGUAGE,
+  compositionLanguage:
+    "product positioned per the marketing layout block — leaves intentional negative space for typeset copy; product fills approximately 50–65% of the canvas to leave breathing room for headline/subhead/CTA; full product assembly remains entirely visible inside the frame",
+  qualityLanguage:
+    SHARED_QUALITY_LANGUAGE +
+    "; typeset copy rendered with crisp, kerned, brand-appropriate letterforms — luxury editorial typesetting in the spirit of high-end fragrance campaigns; letterforms are sharp, readable, and free of artifacting",
+  // Drop the bottle-label / text bans because the marketing block legitimately
+  // adds typeset copy to the LAYOUT (never to the bottle). Keep all other
+  // negatives. The marketing block itself reasserts "no text on the bottle".
+  negativeLanguage:
+    "no label on the bottle, no text on the bottle, no badge on the bottle, no watermark, no brand name baked into the glass; no props (unless the marketing block explicitly asks for them), no secondary product, no hands, no spray mist, no flowers; no chrome-CGI sheen on plastic caps; no transparent or checkerboard background; no broad central reflection stripe on the glass body; no overhead-flat shadow directly beneath the bottle, no double shadow, no harsh shadow edge; no cool/blue light unless the scene overlay calls for it; no Aesop bottles, no Aesop labels, no Aesop product silhouettes; no Kinfolk magazine page chrome (no titles, captions, page edges, fold lines, magazine bindings) — Kinfolk is a STYLE reference only; no other brand's bottle shapes — the subject is the Best Bottles bottle from the reference image only; no garbled, warped, or distorted lettering — typeset copy must be crisp and readable",
+};
+
 export const SQUARE_MARKETPLACE_1800X1800: ImagePreset = {
   // Bumped to 1792×1792 — closest multiple-of-16 size to the original 1800
   // for gpt-image-2 compliance. Still 1:1 square. ID stable for tag continuity.
@@ -414,6 +499,8 @@ export const IMAGE_PRESETS: Record<string, ImagePreset> = {
   [GRID_CARD_2000X2200.id]: GRID_CARD_2000X2200,
   [GRID_CARD_EXPLODED_2000X2200.id]: GRID_CARD_EXPLODED_2000X2200,
   [MASTER_SCENE_FLEXIBLE_2000X2200.id]: MASTER_SCENE_FLEXIBLE_2000X2200,
+  [MASTER_ANGLE_2080X2288.id]: MASTER_ANGLE_2080X2288,
+  [MASTER_MARKETING_2080X2288.id]: MASTER_MARKETING_2080X2288,
   [SANITY_HERO_928X1152.id]: SANITY_HERO_928X1152,
   [PAPER_DOLL_COMPONENT_1000X1300.id]: PAPER_DOLL_COMPONENT_1000X1300,
   [PAPER_DOLL_COMPONENT_1500X1300.id]: PAPER_DOLL_COMPONENT_1500X1300,
@@ -425,6 +512,8 @@ export const IMAGE_PRESET_LIST: ImagePreset[] = [
   GRID_CARD_2000X2200,
   GRID_CARD_EXPLODED_2000X2200,
   MASTER_SCENE_FLEXIBLE_2000X2200,
+  MASTER_ANGLE_2080X2288,
+  MASTER_MARKETING_2080X2288,
   SANITY_HERO_928X1152,
   PAPER_DOLL_COMPONENT_1000X1300,
   PAPER_DOLL_COMPONENT_1500X1300,

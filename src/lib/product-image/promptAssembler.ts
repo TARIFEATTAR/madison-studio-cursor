@@ -139,6 +139,106 @@ export function buildLiquidBlock(liquid: LiquidSpec | null | undefined): string 
   ].join("\n");
 }
 
+/**
+ * Camera-angle override for the Master · Angle preset. The preset itself is
+ * intentionally angle-agnostic; the operator picks one of these per
+ * generation via the chip strip in the Masters tab. The selected angle is
+ * injected as a CAMERA ANGLE block ahead of the SKU spec so the model knows
+ * to override the global "front-facing eye-level" assumption.
+ *
+ * `referenceModifier` is the filename suffix the operator should use for a
+ * per-angle reference PNG (e.g. `--3qtr-left` →
+ * `GB-EMP-CLR-100ML-BST-BLK--3qtr-left.png`). Falls back to the default
+ * front-facing reference when no per-angle PNG is present — quality varies.
+ */
+export interface CameraAngleSpec {
+  id: string;
+  label: string;
+  /** Strong, directive prompt language describing the camera position. */
+  promptLanguage: string;
+  /** Filename suffix for an optional per-angle reference PNG. */
+  referenceModifier?: string;
+}
+
+export function buildCameraAngleBlock(angle: CameraAngleSpec): string {
+  return [
+    "CAMERA ANGLE OVERRIDE (this overrides the default front-facing eye-level framing):",
+    `- Angle: ${angle.label}`,
+    `- ${angle.promptLanguage}`,
+    "- The bottle's identity (silhouette, material, fitment, cap, glass color, dimensions) is preserved exactly from the SKU spec and any attached reference image — only the camera position changes",
+    "- Maintain consistent lighting direction relative to the bottle so highlights and shadow read correctly from the new viewpoint",
+  ].join("\n");
+}
+
+/**
+ * Marketing-copy spec for the Master · Marketing preset. Drives gpt-image-2's
+ * text-rendering capability — the model produces typeset letterforms in the
+ * canvas's negative space (NOT on the bottle itself).
+ *
+ * `layout` controls where the typesetting sits relative to the bottle:
+ *   - "left-third": bottle anchors right, copy stacks down the left third
+ *   - "right-third": bottle anchors left, copy stacks down the right third
+ *   - "lower-banner": bottle centered upper, copy banded across the lower 1/3
+ *   - "upper-banner": copy banded across the upper 1/4, bottle dominates lower
+ *   - "centered-overlay": copy overlays the bottle area with sufficient
+ *     contrast (use sparingly — risks fighting the bottle for attention)
+ */
+export type MarketingLayout =
+  | "left-third"
+  | "right-third"
+  | "lower-banner"
+  | "upper-banner"
+  | "centered-overlay";
+
+export interface MarketingCopySpec {
+  headline: string;
+  subhead?: string;
+  cta?: string;
+  layout: MarketingLayout;
+  /** Optional brand voice cue ("editorial luxury", "bold modern", etc.). */
+  voiceCue?: string;
+}
+
+const MARKETING_LAYOUT_LANGUAGE: Record<MarketingLayout, string> = {
+  "left-third":
+    "the bottle anchors in the RIGHT THIRD of the canvas; typeset copy stacks vertically in the LEFT THIRD with generous padding from both the canvas edge and the bottle",
+  "right-third":
+    "the bottle anchors in the LEFT THIRD of the canvas; typeset copy stacks vertically in the RIGHT THIRD with generous padding from both the canvas edge and the bottle",
+  "lower-banner":
+    "the bottle is centered in the UPPER TWO-THIRDS of the canvas; typeset copy is banded horizontally across the LOWER ONE-THIRD, centered, with the headline sitting just above the subhead and the CTA below",
+  "upper-banner":
+    "typeset copy is banded horizontally across the UPPER ONE-QUARTER of the canvas, centered; the bottle anchors in the LOWER THREE-QUARTERS with breathing room beneath the type",
+  "centered-overlay":
+    "the bottle is centered; typeset copy is overlaid in the canvas's negative space with sufficient contrast to remain readable — never crossing the bottle's silhouette",
+};
+
+export function buildMarketingCopyBlock(copy: MarketingCopySpec): string {
+  const lines: string[] = [
+    "TYPESET COPY (layout text in negative space — NOT a label on the bottle):",
+    `- Layout: ${MARKETING_LAYOUT_LANGUAGE[copy.layout]}`,
+    `- Headline: "${copy.headline}" — luxury editorial serif, large display size, sharp kerning, brand-appropriate weight`,
+  ];
+  if (copy.subhead) {
+    lines.push(
+      `- Subhead: "${copy.subhead}" — sized clearly subordinate to the headline, sentence-case, comfortable line-height`,
+    );
+  }
+  if (copy.cta) {
+    lines.push(
+      `- Call-to-action: "${copy.cta}" — small uppercase tracking-wide button-style label, refined and restrained`,
+    );
+  }
+  if (copy.voiceCue) {
+    lines.push(`- Typesetting voice: ${copy.voiceCue}`);
+  }
+  lines.push(
+    "- Letterforms must be CRISP, READABLE, and free of warping, garbling, or AI-typography artifacts",
+    "- Render copy as typeset layout text in the canvas's negative space — the bottle itself remains LABEL-FREE and TEXT-FREE",
+    "- Reproduce the exact strings above verbatim — do NOT paraphrase, abbreviate, or substitute words",
+  );
+  return lines.join("\n");
+}
+
 export interface AssemblePromptInput {
   presetId: string;
   sku: ConvexProductLike;
@@ -156,6 +256,18 @@ export interface AssemblePromptInput {
    * "no-tube" if unspecified.
    */
   bodyVariant?: PaperDollBodyVariant;
+  /**
+   * Camera-angle override for the Master · Angle preset. When set, a CAMERA
+   * ANGLE block is injected before SKU data so the model overrides the
+   * default front-facing assumption.
+   */
+  cameraAngle?: CameraAngleSpec | null;
+  /**
+   * Marketing-copy spec for the Master · Marketing preset. When set, a
+   * TYPESET COPY block is appended after SKU data so the model lays
+   * headline/subhead/CTA into the canvas's negative space.
+   */
+  marketingCopy?: MarketingCopySpec | null;
 }
 
 /**
@@ -269,6 +381,8 @@ export interface AssembledPrompt {
     chipOverrides: string | null;
     liquid: string | null;
     constraints: string;
+    cameraAngle?: string | null;
+    marketingCopy?: string | null;
   };
 }
 
@@ -334,13 +448,22 @@ export function assemblePrompt(input: AssemblePromptInput): AssembledPrompt {
     ? buildBestBottlesBrandBlock()
     : null;
 
+  const cameraAngleBlock = input.cameraAngle
+    ? buildCameraAngleBlock(input.cameraAngle)
+    : null;
+  const marketingCopyBlock = input.marketingCopy
+    ? buildMarketingCopyBlock(input.marketingCopy)
+    : null;
+
   const sections = [
     GLOBAL_SYSTEM_BLOCK,
     brandBlock,
     presetBlock,
+    cameraAngleBlock,
     skuBlock,
     chipBlock,
     liquidBlock,
+    marketingCopyBlock,
     CONSTRAINT_BLOCK,
   ].filter((section): section is string => section !== null);
 
@@ -356,6 +479,8 @@ export function assemblePrompt(input: AssemblePromptInput): AssembledPrompt {
       chipOverrides: chipBlock,
       liquid: liquidBlock,
       constraints: CONSTRAINT_BLOCK,
+      cameraAngle: cameraAngleBlock,
+      marketingCopy: marketingCopyBlock,
     },
   };
 }

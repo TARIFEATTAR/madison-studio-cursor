@@ -163,7 +163,7 @@ function ImageReveal({
 }
 
 // Empty State - Minimal viewfinder
-function EmptyState() {
+function EmptyState({ showFirstFrameHint }: { showFirstFrameHint: boolean }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -178,6 +178,16 @@ function EmptyState() {
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-px bg-[var(--darkroom-border-strong)]" />
         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-px bg-[var(--darkroom-border-strong)]" />
       </div>
+      {showFirstFrameHint && (
+        <div className="max-w-[340px] space-y-2 px-6">
+          <p className="text-[11px] font-mono uppercase tracking-[0.16em] text-[var(--darkroom-text-muted)]">
+            Ready for the first frame
+          </p>
+          <p className="text-sm leading-relaxed text-[var(--darkroom-text-dim)]">
+            Add a product reference for exact packaging, or describe a concept below and expose a frame.
+          </p>
+        </div>
+      )}
     </motion.div>
   );
 }
@@ -205,8 +215,8 @@ export function CenterCanvas({
 
   // Auto-resize textarea. Start tall enough to make it obvious this is a
   // paragraph brief, not a single-line chat input.
-  const PROMPT_MIN_HEIGHT = 96;
-  const PROMPT_MAX_HEIGHT = 220;
+  const PROMPT_MIN_HEIGHT = 72;
+  const PROMPT_MAX_HEIGHT = 180;
   const resizeTextarea = () => {
     const textarea = textareaRef.current;
     if (textarea) {
@@ -297,7 +307,7 @@ export function CenterCanvas({
               isNewlyGenerated={heroImage.id === newlyGeneratedId}
             />
           ) : (
-            <EmptyState key="empty" />
+            <EmptyState key="empty" showFirstFrameHint={images.length === 0} />
           )}
         </AnimatePresence>
       </div>

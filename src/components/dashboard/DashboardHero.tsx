@@ -33,6 +33,9 @@ export function DashboardHero() {
 
   // Generate encouraging subtitle based on state
   const getSubtitle = () => {
+    if (!stats?.totalContent) {
+      return "Start with one piece of content, then build from there.";
+    }
     if (stats?.onBrandScore && stats.onBrandScore >= 85) {
       return "Your brand is strong. Let's create something today.";
     }

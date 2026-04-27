@@ -1,8 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Save, Settings, HelpCircle, X, Download, CheckCircle, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, Save, Download, CheckCircle, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
@@ -23,7 +22,6 @@ interface DarkRoomHeaderProps {
   savedCount: number;
   isSaving: boolean;
   onSaveAll?: () => void;
-  onOpenSettings?: () => void;
   // Hero image actions
   heroImage?: HeroImage | null;
   onDownloadHero?: () => void;
@@ -46,11 +44,6 @@ export function DarkRoomHeader({
 }: DarkRoomHeaderProps) {
   const navigate = useNavigate();
 
-  // Exit to Create page
-  const handleExit = () => {
-    navigate("/create");
-  };
-
   // Go back to Create (prevents loop with Light Table)
   const handleBack = () => {
     navigate("/create");
@@ -58,7 +51,7 @@ export function DarkRoomHeader({
 
   return (
     <header className="dark-room-header">
-      {/* Left: Back + Exit + Title */}
+      {/* Left: Back + Title */}
       <div className="flex items-center gap-2">
         <TooltipProvider>
           <Tooltip>
@@ -73,24 +66,7 @@ export function DarkRoomHeader({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              <p>Back</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleExit}
-                className="h-8 w-8 p-0 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:bg-white/5"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p>Exit</p>
+              <p>Back to Create</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -180,24 +156,6 @@ export function DarkRoomHeader({
             Save All
           </Button>
         )}
-
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => window.open("/docs/dark-room", "_blank")}
-                className="h-8 w-8 p-0 text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:bg-white/5"
-              >
-                <HelpCircle className="w-3.5 h-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              <p>Help</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
 
         {rightExtra}
       </div>

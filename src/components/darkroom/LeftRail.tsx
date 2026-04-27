@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Package, Image, Palette, Layers, BookOpen } from "lucide-react";
+import { Package, Image, Palette, Layers, BookOpen, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -18,6 +18,12 @@ import { ProductSelector } from "@/components/forge/ProductSelector";
 import { Product } from "@/hooks/useProducts";
 import { cn } from "@/lib/utils";
 import { ImageLibraryModal } from "@/components/image-editor/ImageLibraryModal";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface UploadedImage {
   url: string;
@@ -60,6 +66,28 @@ interface LeftRailProps {
   onStyleReferenceLibraryOutputChange: (value: boolean) => void;
 }
 
+function InlineHelp({ children }: { children: ReactNode }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex h-4 w-4 items-center justify-center rounded-full text-[var(--darkroom-text-dim)] hover:text-[var(--darkroom-accent)]"
+          aria-label="More information"
+        >
+          <Info className="h-3 w-3" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent
+        side="right"
+        className="max-w-[260px] border-[var(--darkroom-border)] bg-[var(--camera-body)] text-[11px] leading-relaxed text-[var(--darkroom-text)]"
+      >
+        {children}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 export function LeftRail({
   selectedProduct,
   onProductSelect,
@@ -90,6 +118,7 @@ export function LeftRail({
   const proSettingsCount = Object.values(proSettings).filter(Boolean).length;
 
   return (
+    <TooltipProvider delayDuration={150}>
     <aside className="left-rail">
       {/* Section: Product Selection */}
       <div className="left-rail__section">
@@ -98,6 +127,15 @@ export function LeftRail({
           <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--darkroom-text-muted)] font-mono">
             Product Context
           </span>
+          <InlineHelp>
+            Product Context adds structured details like SKU, brand notes, bottle type, and product metadata. It does not replace the Product Reference Image when exact packaging needs to match.
+          </InlineHelp>
+          <Badge
+            variant="outline"
+            className="ml-auto border-white/[0.08] bg-white/[0.03] px-1.5 py-0 text-[8px] font-mono uppercase tracking-wider text-[var(--darkroom-text-dim)]"
+          >
+            Optional
+          </Badge>
         </div>
 
         {selectedProduct ? (
@@ -142,7 +180,7 @@ export function LeftRail({
             </div>
           </motion.div>
         ) : (
-          <div className="product-selector-wrapper">
+          <div className="product-selector-wrapper space-y-2">
             <ProductSelector
               value={selectedProduct?.name || ""}
               onSelect={(product) => onProductSelect(product)}
@@ -150,6 +188,9 @@ export function LeftRail({
               showLabel={false}
               buttonClassName="w-full justify-between h-12 bg-[var(--camera-body-deep)] border-[var(--darkroom-border)] text-[var(--darkroom-text-muted)] hover:text-[var(--darkroom-text)] hover:border-[var(--darkroom-accent)] rounded-lg"
             />
+            <p className="text-[10px] leading-relaxed text-[var(--darkroom-text-dim)]">
+              Adds SKU, brand, and product notes. Use the product reference below when you need the image to match exact packaging.
+            </p>
           </div>
         )}
       </div>
@@ -174,6 +215,15 @@ export function LeftRail({
             >
               Background plate mode
             </Label>
+            <InlineHelp>
+              Use this when you want to create a reusable empty scene first. Product uploads are disabled in this mode so the output stays clean for later compositing.
+            </InlineHelp>
+            <Badge
+              variant="outline"
+              className="ml-auto mr-1 border-[var(--darkroom-accent)]/20 bg-[var(--darkroom-accent)]/5 px-1.5 py-0 text-[8px] font-mono uppercase tracking-wider text-[var(--darkroom-accent)]"
+            >
+              Advanced
+            </Badge>
             <Switch
               id="background-plate-mode"
               checked={backgroundPlateMode}
@@ -182,8 +232,7 @@ export function LeftRail({
             />
           </div>
           <p className="text-[10px] leading-relaxed text-[var(--darkroom-text-muted)]">
-            Generates an empty scene only (no bottles). Saved with a background tag so you can load it
-            here later and composite 2–6 products, then refine with inpainting.
+            Creates an empty background scene with no product. Use it later as a reusable set for composite shots.
           </p>
         </div>
 
@@ -192,16 +241,19 @@ export function LeftRail({
           <div className="flex items-center gap-2 mb-2">
             <Image className="w-3 h-3 text-[var(--darkroom-accent)]" />
             <span className="text-[9px] font-semibold uppercase tracking-[0.08em] text-[var(--darkroom-text-dim)] font-mono">
-              Product Image
+              Product Reference Image
             </span>
+            <InlineHelp>
+              Upload this when the generated product must preserve real packaging, shape, label placement, or materials. For concept-only exploration, a written prompt can be enough.
+            </InlineHelp>
           </div>
           <UploadZone
             type="product"
-            label="Product Image"
+            label="Product Reference"
             description={
               backgroundPlateMode
-                ? "Optional in plate mode — add products after you have a scene"
-                : "For enhancement & placement"
+                ? "Disabled while creating an empty background plate"
+                : "Controls exact shape, label, and placement"
             }
             image={productImage}
             onUpload={onProductImageUpload}
@@ -223,6 +275,7 @@ export function LeftRail({
                 onClick={() => setShowBackgroundUpload(true)}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-[var(--camera-body-deep)] border border-dashed border-[var(--darkroom-border)] text-[var(--darkroom-text-dim)] text-xs font-mono uppercase tracking-wider hover:border-[var(--darkroom-accent)] hover:text-[var(--darkroom-accent)] transition-all duration-200"
                 disabled={isGenerating}
+                title="Add an existing background or set image to place products into"
               >
                 <Layers className="w-3.5 h-3.5" />
                 Add Background Scene
@@ -238,7 +291,7 @@ export function LeftRail({
                 <UploadZone
                   type="background"
                   label="Background Scene"
-                  description="Composites product into scene"
+                  description="Reusable set or environment"
                   image={backgroundImage}
                   onUpload={onBackgroundImageUpload}
                   onRemove={() => {
@@ -262,6 +315,7 @@ export function LeftRail({
                 onClick={() => setShowStyleUpload(true)}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-[var(--camera-body-deep)] border border-dashed border-[var(--darkroom-border)] text-[var(--darkroom-text-dim)] text-xs font-mono uppercase tracking-wider hover:border-[var(--darkroom-accent)] hover:text-[var(--darkroom-accent)] transition-all duration-200"
                 disabled={isGenerating}
+                title="Add an image whose lighting, mood, finish, or composition should guide the render"
               >
                 <Palette className="w-3.5 h-3.5" />
                 Add Style Reference
@@ -287,7 +341,7 @@ export function LeftRail({
                 <UploadZone
                   type="style"
                   label="Style Reference"
-                  description="Matches lighting & mood"
+                  description="Guides lighting, mood, and finish"
                   image={styleReference}
                   onUpload={onStyleReferenceUpload}
                   onRemove={() => {
@@ -352,5 +406,6 @@ export function LeftRail({
 
       <StyleReferenceGuideModal open={styleGuideOpen} onOpenChange={setStyleGuideOpen} />
     </aside>
+    </TooltipProvider>
   );
 }

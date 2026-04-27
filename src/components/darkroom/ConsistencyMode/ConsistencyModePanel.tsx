@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Layers, Aperture, Loader2, XCircle, Trash2, Camera, Package, Maximize2, ChevronDown, Sliders } from "lucide-react";
+import { Layers, Aperture, Loader2, XCircle, Trash2, Camera, Package, Maximize2, ChevronDown, Sliders, Info } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +16,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useConsistencySet } from "@/hooks/useConsistencySet";
 import type { VariationItem } from "@/lib/consistencyMode";
 import { markImageAsHero, toggleImageHero } from "@/lib/imageLibraryTags";
@@ -69,6 +75,28 @@ const EMPTY_SELECTION: AxisSelection = {
   capColor: [],
   fitmentType: [],
 };
+
+function InlineHelp({ children }: { children: ReactNode }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex h-4 w-4 items-center justify-center rounded-full text-[var(--darkroom-text-dim)] hover:text-[var(--darkroom-accent)]"
+          aria-label="More information"
+        >
+          <Info className="h-3 w-3" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent
+        side="left"
+        className="max-w-[260px] border-[var(--darkroom-border)] bg-[var(--camera-body)] text-[11px] leading-relaxed text-[var(--darkroom-text)]"
+      >
+        {children}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 /**
  * Consistency Mode — bulk variation generation that shares background,
@@ -449,6 +477,7 @@ export function ConsistencyModePanel({
   };
 
   return (
+    <TooltipProvider delayDuration={150}>
     <div className="space-y-2">
       {/* Pipeline-linked banner — only when launched from Best Bottles
           Pipeline page. Shown at top so operator knows what shape group
@@ -481,6 +510,9 @@ export function ConsistencyModePanel({
             <span className="text-[11px] font-medium text-[var(--darkroom-text)]">
               Consistency Mode
             </span>
+            <InlineHelp>
+              Sets are for repeatable product families. The master image establishes the shared look; variation chips decide what changes between frames.
+            </InlineHelp>
           </div>
           {status === "running" ? (
             <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--darkroom-accent)]">
@@ -494,8 +526,8 @@ export function ConsistencyModePanel({
         </div>
         <div className="px-2.5 pb-2.5">
           <p className="text-[10px] leading-relaxed text-[var(--darkroom-text-muted)]">
-            Upload a master. Generate a set where only bottle, cap, and fitment
-            change — background, lighting, and camera stay locked.
+            Use this for product families: upload one master, choose the variation chips,
+            and keep the background, lighting, and camera locked across the set.
           </p>
         </div>
       </div>
@@ -505,14 +537,18 @@ export function ConsistencyModePanel({
         <div className="flex items-center gap-1.5">
           <LEDIndicator state={masterImage ? "active" : "off"} size="sm" />
           <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--darkroom-accent)]">
-            01 · Master Reference
+            01 · Master Product Reference
           </span>
+          <InlineHelp>
+            Use the cleanest image of the product family here. It becomes the anchor for shape, framing, and overall set consistency.
+          </InlineHelp>
         </div>
         <UploadZone
           type="product"
-          label="Bottle / cap / fitment"
-          description="Pick from Image Library or drop a new file — shape locks for every variation"
+          label="Master Product Image"
+          description="Pick from Image Library or drop a new file. Shape and composition lock for every variation."
           image={masterImage}
+          className="upload-zone-container--compact"
           onUpload={(img) => {
             setMasterImage(img);
             // A fresh upload replaces any previously-promoted master.
@@ -535,6 +571,9 @@ export function ConsistencyModePanel({
             <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--darkroom-accent)]">
               02 · Variations
             </span>
+            <InlineHelp>
+              Each selected chip multiplies the set size. The live frame counter shows the exact number of images before you expose the set.
+            </InlineHelp>
             {/* Live combination counter — shows how the matrix expands as
                 chips are ticked. Surfaces set-size growth in real time so
                 the operator never clicks Expose and is surprised by 32
@@ -600,6 +639,9 @@ export function ConsistencyModePanel({
             <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--darkroom-accent)]">
               03 · Advanced
             </span>
+            <InlineHelp>
+              Advanced controls refine composition, backdrop, light, and shadow for every image in the set. Use them when the default studio setup is too generic.
+            </InlineHelp>
             <span className="text-[9px] text-[var(--darkroom-text-dim)]">
               composition · backdrop · light · shadow
             </span>
@@ -688,6 +730,9 @@ export function ConsistencyModePanel({
           <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--darkroom-accent)]">
             04 · Scene Notes
           </span>
+          <InlineHelp>
+            Scene Notes apply to every generated frame in the set. Use them for shared instructions like surface, prop style, or campaign mood.
+          </InlineHelp>
           <span className="text-[9px] text-[var(--darkroom-text-dim)]">optional</span>
         </div>
         <Textarea
@@ -856,5 +901,6 @@ export function ConsistencyModePanel({
         onBulkMarkHeroes={handleBulkMarkHeroes}
       />
     </div>
+    </TooltipProvider>
   );
 }

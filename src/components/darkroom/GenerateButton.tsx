@@ -51,7 +51,7 @@ export function GenerateButton({
       return "Describe the empty set or pick a backdrop preset on the right — then capture a tagged scene for compositing.";
     }
     if (!hasProduct && !hasBackground) {
-      return "Upload a product image to begin";
+      return "Add a product reference or describe a shot to begin.";
     }
     if (hasProduct && !hasBackground) {
       return "Try adding a background scene for composition";

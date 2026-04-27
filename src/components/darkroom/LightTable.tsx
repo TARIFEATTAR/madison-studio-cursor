@@ -22,8 +22,6 @@ import {
   Square,
   Save,
   Trash2,
-  Download,
-  Film,
   ExternalLink,
   Loader2,
   X,
@@ -51,7 +49,6 @@ interface LightTableProps {
   onOpenEditor: (image: LightTableImage) => void;
   onSaveSelected: (ids: string[]) => void;
   onDeleteSelected: (ids: string[]) => void;
-  onCreateVideo: (image: LightTableImage) => void;
   isSaving?: boolean;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
@@ -64,7 +61,6 @@ export function LightTable({
   onOpenEditor,
   onSaveSelected,
   onDeleteSelected,
-  onCreateVideo,
   isSaving = false,
   isCollapsed = false,
   onToggleCollapse,
@@ -312,13 +308,6 @@ export function LightTable({
                             title="Open in Editor"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            className="light-table__hover-btn opacity-50 cursor-not-allowed"
-                            disabled
-                            title="Video - Coming Soon"
-                          >
-                            <Film className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       )}
