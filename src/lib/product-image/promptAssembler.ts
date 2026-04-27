@@ -19,6 +19,10 @@ import {
   getImagePreset,
   type ImagePreset,
 } from "@/config/imagePresets";
+import {
+  buildBestBottlesBrandBlock,
+  isBestBottlesFamily,
+} from "@/config/bestBottlesBrand";
 import { getBodyShapeDescriptor } from "@/config/familyShapeDescriptors";
 import { getApplicatorShapeDescriptor } from "@/config/applicatorShapeDescriptors";
 import {
@@ -252,6 +256,14 @@ export interface AssembledPrompt {
   preset: ImagePreset;
   blocks: {
     global: string;
+    /**
+     * Brand-context block — populated only for SKUs in
+     * `BEST_BOTTLES_FAMILIES`. Gives the model explicit Best Bottles
+     * visual-language guardrails (palette, typography, retired legacy
+     * aesthetic). Null for non-Best-Bottles SKUs and for paper-doll
+     * component-scope renders.
+     */
+    brand: string | null;
     preset: string;
     sku: string;
     chipOverrides: string | null;
@@ -285,6 +297,10 @@ export function assemblePrompt(input: AssemblePromptInput): AssembledPrompt {
       preset,
       blocks: {
         global: "",
+        // Paper-doll component renders are transparent layer assets — no
+        // brand context needed (the brand language is for full-scene
+        // catalog imagery, not isolated transparent components).
+        brand: null,
         preset: buildPresetBlock(preset),
         sku: focused,
         chipOverrides: null,
@@ -307,8 +323,20 @@ export function assemblePrompt(input: AssemblePromptInput): AssembledPrompt {
   const chipBlock = input.chipOverrides ? buildChipOverrideBlock(input.chipOverrides) : null;
   const liquidBlock = buildLiquidBlock(input.liquid ?? null);
 
+  // BRAND CONTEXT — only injected for Best Bottles family SKUs. The block
+  // gives the image model explicit guardrails about Best Bottles' visual
+  // language (warm-neutral palette, editorial restraint, muted-gold-only
+  // accent, retired legacy navy aesthetic) so generated catalog imagery
+  // matches the 2026 design system instead of regressing to the wholesale-
+  // supplier flyer treatment in the legacy catalog. See
+  // `src/config/bestBottlesBrand.ts` and `docs/best-bottles-brand/`.
+  const brandBlock = isBestBottlesFamily(input.sku.family)
+    ? buildBestBottlesBrandBlock()
+    : null;
+
   const sections = [
     GLOBAL_SYSTEM_BLOCK,
+    brandBlock,
     presetBlock,
     skuBlock,
     chipBlock,
@@ -322,6 +350,7 @@ export function assemblePrompt(input: AssemblePromptInput): AssembledPrompt {
     preset,
     blocks: {
       global: GLOBAL_SYSTEM_BLOCK,
+      brand: brandBlock,
       preset: presetBlock,
       sku: skuBlock,
       chipOverrides: chipBlock,
