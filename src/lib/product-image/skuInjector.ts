@@ -162,9 +162,32 @@ const NON_CYLINDRICAL_FAMILIES: ReadonlySet<string> = new Set([
   "Tall Rectangular",
 ]);
 
+/**
+ * Square-cross-section families: width = depth, so the bottle is a square
+ * prism (cube-stretched-tall), not a flask or slab. The model needs to be
+ * told this explicitly — "rectangular / faceted" leaves it too much room
+ * to render an elongated narrow profile in one axis. Empire is the canonical
+ * example: 50ml is 37×37 mm, 100ml is 46×46 mm, both with body height much
+ * taller than the cross-section.
+ *
+ * Add a family here only when its cross-section is genuinely square (W=D).
+ * Truly rectangular families (W≠D, e.g. flask shapes) stay out — they fall
+ * back to "rectangular / faceted" language until the depth axis is added
+ * to the Convex schema (see project_bottle_depth_dimension memory).
+ */
+const SQUARE_CROSS_SECTION_FAMILIES: ReadonlySet<string> = new Set([
+  "Empire",
+  "Square",
+]);
+
 export function isCylindricalFamily(family: string | null | undefined): boolean {
   if (!family) return true;
   return !NON_CYLINDRICAL_FAMILIES.has(family);
+}
+
+export function isSquareCrossSection(family: string | null | undefined): boolean {
+  if (!family) return false;
+  return SQUARE_CROSS_SECTION_FAMILIES.has(family);
 }
 
 /**
@@ -257,25 +280,38 @@ export function buildProductSpecBlock(
 
   const diameterMm = parseDimensionMm(product.diameter);
   const familyIsCylindrical = isCylindricalFamily(product.family);
+  const familyIsSquare = isSquareCrossSection(product.family);
   if (bodyFields) {
     if (diameterMm != null) {
       if (familyIsCylindrical) {
         lines.push(`- Diameter: ${diameterMm} mm`);
+      } else if (familyIsSquare) {
+        // Square cross-section — width = depth. The model needs to be told
+        // both axes are equal, otherwise it tends to render an elongated
+        // narrow profile (a flask) instead of a square prism.
+        lines.push(
+          `- Cross-section: SQUARE PRISM (width = depth = ${diameterMm} mm) — NOT a flask, NOT a slab, NOT cylindrical. Front face and side face are both ${diameterMm} mm wide.`,
+        );
       } else {
         // For rectangular/faceted families the Convex "diameter" is the
         // longer face-width or diagonal, not a true diameter. Surface it
         // as cross-section width to keep the model from producing a
-        // cylindrical bottle.
+        // cylindrical bottle. Depth axis is currently unknown — see the
+        // project_bottle_depth_dimension memory for the schema fix.
         lines.push(
-          `- Cross-section: rectangular / faceted (NOT cylindrical) — face dimension approximately ${diameterMm} mm`,
+          `- Cross-section: rectangular / faceted (NOT cylindrical) — front face approximately ${diameterMm} mm wide`,
         );
       }
     } else {
-      lines.push(
-        familyIsCylindrical
-          ? `- Diameter: ${MISSING}`
-          : `- Cross-section: rectangular / faceted (NOT cylindrical) — face dimension ${MISSING}`,
-      );
+      if (familyIsCylindrical) {
+        lines.push(`- Diameter: ${MISSING}`);
+      } else if (familyIsSquare) {
+        lines.push(`- Cross-section: SQUARE PRISM (width = depth) — face dimension ${MISSING}`);
+      } else {
+        lines.push(
+          `- Cross-section: rectangular / faceted (NOT cylindrical) — face dimension ${MISSING}`,
+        );
+      }
     }
   }
 
@@ -321,10 +357,14 @@ export function buildProductSpecBlock(
   if (scope === "body") {
     lines.push("COMPONENT CONSTRAINTS (body only):");
     if (heightMm != null && diameterMm != null) {
+      const ratio = (heightMm / diameterMm).toFixed(2);
       if (familyIsCylindrical) {
-        const ratio = (heightMm / diameterMm).toFixed(2);
         lines.push(
           `- Maintain exact proportions: height-to-diameter ratio of ${ratio} (${heightMm} mm / ${diameterMm} mm)`,
+        );
+      } else if (familyIsSquare) {
+        lines.push(
+          `- Maintain exact proportions per the silhouette descriptor above. Body height ${heightMm} mm; SQUARE PRISM cross-section (width = depth = ${diameterMm} mm). NOT a flask, NOT a slab, NOT a cylinder.`,
         );
       } else {
         lines.push(
@@ -357,13 +397,16 @@ export function buildProductSpecBlock(
       "These measurements come directly from Grace's catalog and are NOT approximations. The rendered bottle MUST match these dimensions exactly. Do not invent, scale, or interpolate.",
     );
     if (heightMm != null && diameterMm != null) {
+      const ratio = (heightMm / diameterMm).toFixed(2);
       if (familyIsCylindrical) {
-        const ratio = (heightMm / diameterMm).toFixed(2);
         lines.push(
           `- BODY HEIGHT: ${heightMm} mm (without cap). DIAMETER: ${diameterMm} mm. Height-to-diameter ratio: ${ratio}:1. Render the body at exactly this proportion.`,
         );
+      } else if (familyIsSquare) {
+        lines.push(
+          `- BODY HEIGHT: ${heightMm} mm (without cap). FACE WIDTH and DEPTH: ${diameterMm} mm × ${diameterMm} mm (square cross-section — front face and side face are equal). Height-to-width ratio: ${ratio}:1. Cross-section is a SQUARE PRISM — NOT a flask, NOT a slab, NOT cylindrical, NOT a thin rectangle. The bottle is as deep as it is wide.`,
+        );
       } else {
-        const ratio = (heightMm / diameterMm).toFixed(2);
         lines.push(
           `- BODY HEIGHT: ${heightMm} mm (without cap). FACE WIDTH: ${diameterMm} mm. Height-to-width ratio: ${ratio}:1. Cross-section is RECTANGULAR / FACETED — never cylindrical. Render the body at exactly this proportion.`,
         );
