@@ -30,6 +30,10 @@ import {
   type ComponentScope,
   type ConvexProductLike,
 } from "./skuInjector";
+import {
+  buildProductHubPromptBlock,
+  type ProductHubLike,
+} from "./productHubPromptInjector";
 
 /**
  * Paper-doll body variant. Two bodies cover every SKU in a family/capacity/
@@ -242,6 +246,17 @@ export function buildMarketingCopyBlock(copy: MarketingCopySpec): string {
 export interface AssemblePromptInput {
   presetId: string;
   sku: ConvexProductLike;
+  /**
+   * Madison Product Hub row — when provided, becomes the canonical source
+   * for the SKU DATA layer (replaces buildProductSpecBlock with the richer
+   * buildProductHubPromptBlock that emits the full schematic envelope).
+   * `sku` is still required as a fallback for chip-resolution paths and
+   * for backwards compatibility with paper-doll lanes that haven't migrated
+   * to Product Hub yet.
+   *
+   * If both are provided, productHub wins for the SKU DATA block.
+   */
+  productHub?: ProductHubLike | null;
   chipOverrides?: ChipOverrides;
   liquid?: LiquidSpec | null;
   /**
@@ -431,9 +446,20 @@ export function assemblePrompt(input: AssemblePromptInput): AssembledPrompt {
   const compositionOverride =
     applicatorFramingOverride(input.sku.applicator) ?? undefined;
   const presetBlock = buildPresetBlock(preset, { compositionOverride });
-  const skuBlock = buildProductSpecBlock(input.sku, {
-    componentScope: input.componentScope,
-  });
+
+  // SKU DATA layer — Product Hub is the canonical source when present.
+  // The hub's `metadata.bottle_specs` includes the full schematic envelope
+  // (bounding box, per-landmark heights/diameters, transition radii, wall
+  // thickness, ratios) that gives the model dimensionally-accurate geometry
+  // language. Falls back to the Convex-based skuInjector when no hub row is
+  // attached — keeps existing pipelines working during the migration.
+  const skuBlock = input.productHub
+    ? buildProductHubPromptBlock(input.productHub, {
+        componentScope: input.componentScope,
+      })
+    : buildProductSpecBlock(input.sku, {
+        componentScope: input.componentScope,
+      });
   const chipBlock = input.chipOverrides ? buildChipOverrideBlock(input.chipOverrides) : null;
   const liquidBlock = buildLiquidBlock(input.liquid ?? null);
 
