@@ -73,11 +73,14 @@ import {
   PRODUCT_TYPES,
   type ProductStatus,
   type DevelopmentStage,
+  type Product,
+  type UpdateProductInput,
 } from "@/hooks/useProducts";
 import { FormulationSection } from "@/components/products/FormulationSection";
 import { IngredientsSection } from "@/components/products/IngredientsSection";
 import { SDSSection } from "@/components/products/SDSSection";
 import { PackagingSection } from "@/components/products/PackagingSection";
+import { BottleSpecsSection } from "@/components/products/BottleSpecsSection";
 import { MediaSection } from "@/components/products/MediaSection";
 import { useUserRole, type RoleCapabilities } from "@/hooks/useUserRole";
 import { RoleBadge } from "@/components/role";
@@ -97,10 +100,20 @@ import { ProductBottleReferenceSection } from "@/components/products/ProductBott
 // ═══════════════════════════════════════════════════════════════════════════════
 
 interface ProductInfoTabProps {
-  product: any;
+  product: ProductWithVariants;
   isEditing: boolean;
-  onChange: (field: string, value: any) => void;
+  onChange: (field: string, value: unknown) => void;
 }
+
+type ProductVariantSummary = {
+  id?: string | null;
+  title?: string | null;
+  sku?: string | null;
+};
+
+type ProductWithVariants = Product & {
+  variants?: ProductVariantSummary[];
+};
 
 function ProductInfoTab({ product, isEditing, onChange }: ProductInfoTabProps) {
   const productTypes = product.category ? PRODUCT_TYPES[product.category] || [] : [];
@@ -164,7 +177,7 @@ function ProductInfoTab({ product, isEditing, onChange }: ProductInfoTabProps) {
                     <div className="mt-2 p-3 rounded-lg bg-muted/50 border border-border">
                       <p className="text-xs font-medium text-muted-foreground mb-2">Included Variants</p>
                       <div className="flex flex-wrap gap-2">
-                        {product.variants.map((variant: any, index: number) => (
+                        {product.variants.map((variant, index) => (
                           <div key={variant.id || index} className="flex items-center gap-1.5 px-2 py-1 rounded bg-background border border-border">
                             <span className="text-xs text-muted-foreground">{variant.title}:</span>
                             <code className="text-xs font-mono font-medium">{variant.sku || "—"}</code>
@@ -619,7 +632,10 @@ interface TabConfig {
   section: TabSection;
 }
 
-const TAB_CONFIG: TabConfig[] = [
+/**
+ * Default cosmetic-industry tab list (fragrance / skincare / body care).
+ */
+const TAB_CONFIG_COSMETIC: TabConfig[] = [
   { id: "core", label: "Core Details", icon: FileText, section: "info" },
   { id: "tasks", label: "Tasks", icon: ListTodo, section: "info" },
   { id: "media", label: "Media", icon: ImageIcon, section: "media" },
@@ -631,6 +647,44 @@ const TAB_CONFIG: TabConfig[] = [
   { id: "packaging", label: "Packaging", icon: Package, section: "packaging" },
   { id: "content", label: "Content", icon: Sparkles, section: "marketing" },
 ];
+
+/**
+ * Packaging-industry tab list (Best Bottles and other glass/bottle tenants).
+ * Replaces fragrance-specific sections with Bottle Specs — a comprehensive
+ * vessel-spec section covering schematic dimensions, neck thread standards,
+ * material, manufacturing, decoration, sustainability, and certifications.
+ */
+const TAB_CONFIG_PACKAGING: TabConfig[] = [
+  { id: "core", label: "Core Details", icon: FileText, section: "info" },
+  { id: "tasks", label: "Tasks", icon: ListTodo, section: "info" },
+  { id: "media", label: "Media", icon: ImageIcon, section: "media" },
+  { id: "variants", label: "Variants", icon: Layers, section: "info" },
+  { id: "pricing", label: "Pricing", icon: DollarSign, section: "analytics" },
+  { id: "bottle-specs", label: "Bottle Specs", icon: Beaker, section: "info" },
+  { id: "content", label: "Content", icon: Sparkles, section: "marketing" },
+];
+
+/**
+ * Best Bottles organization UUID. Hardcoded for now — eventually this should
+ * read from organizations.industry (or a similar field) so any packaging
+ * tenant gets the bottle-specs experience automatically.
+ */
+const BEST_BOTTLES_ORG_ID = "4ab1ac72-cd7e-4faf-9152-5aa5f2862411";
+
+/** Resolve which tab list to render for a given organization. */
+function resolveTabConfig(organizationId: string | null | undefined): TabConfig[] {
+  if (organizationId === BEST_BOTTLES_ORG_ID) return TAB_CONFIG_PACKAGING;
+  return TAB_CONFIG_COSMETIC;
+}
+
+/** Resolve which sidebar industry preset to use for a given organization. */
+function resolveIndustry(organizationId: string | null | undefined): "cosmetic" | "packaging" {
+  if (organizationId === BEST_BOTTLES_ORG_ID) return "packaging";
+  return "cosmetic";
+}
+
+/** Backwards-compatible alias — kept so other call sites that still import TAB_CONFIG don't break. */
+const TAB_CONFIG = TAB_CONFIG_COSMETIC;
 
 export default function ProductHub() {
   const { productId } = useParams<{ productId: string }>();
@@ -653,23 +707,28 @@ export default function ProductHub() {
   } = useUserRole();
 
   const [isEditing, setIsEditing] = useState(isEditMode);
-  const [editedProduct, setEditedProduct] = useState<any>(null);
+  const [editedProduct, setEditedProduct] = useState<ProductWithVariants | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
 
+  // Industry-aware tab list — Best Bottles gets Bottle Specs in place of
+  // Scent Profile / Ingredients / Compliance / Packaging.
+  const tabConfig = resolveTabConfig(organizationId);
+  const industry = resolveIndustry(organizationId);
+
   // Filter visible tabs based on role
-  const visibleTabs = TAB_CONFIG.filter(tab => canView(tab.section));
+  const visibleTabs = tabConfig.filter(tab => canView(tab.section));
   const [activeTab, setActiveTab] = useState(visibleTabs[0]?.id || "info");
 
   // Initialize edited product when product loads
   useEffect(() => {
     if (product) {
-      setEditedProduct({ ...product });
+      setEditedProduct({ ...(product as ProductWithVariants) });
     }
   }, [product]);
 
   // Track changes
-  const handleChange = (field: string, value: any) => {
-    setEditedProduct((prev: any) => ({ ...prev, [field]: value }));
+  const handleChange = (field: string, value: unknown) => {
+    setEditedProduct((prev) => (prev ? { ...prev, [field]: value } : prev));
     setHasChanges(true);
   };
 
@@ -678,7 +737,7 @@ export default function ProductHub() {
     if (!editedProduct || !productId) return;
 
     // Only send updateable fields, not computed/readonly fields
-    const updatePayload: any = {
+    const updatePayload: UpdateProductInput = {
       id: productId,
       name: editedProduct.name,
       slug: editedProduct.slug,
@@ -945,8 +1004,9 @@ export default function ProductHub() {
             productName={displayProduct.name}
             activeSection={activeTab}
             onSectionChange={setActiveTab}
+            industry={industry}
             accessLevels={Object.fromEntries(
-              TAB_CONFIG.map(t => [t.section, getAccessLevel(t.section)])
+              tabConfig.map(t => [t.section, getAccessLevel(t.section)])
             )}
           />
         </div>
@@ -1020,6 +1080,21 @@ export default function ProductHub() {
                 isEditing={isEditing && canEdit("analytics")}
                 onChange={(field, value) => setEditedProduct(prev => ({ ...prev, [field]: value }))}
               />
+            )}
+
+            {/* Bottle Specs — packaging-industry section. Only rendered when the
+               sidebar surfaces it (Best Bottles / packaging tenants). Editable
+               in-place when isEditing — every field write produces a new metadata
+               object via handleChange("metadata", newMetadata). */}
+            {activeTab === "bottle-specs" && (
+              <>
+                <BottleSpecsSection
+                  product={displayProduct}
+                  isEditing={isEditing && canEdit("info")}
+                  onChange={handleChange}
+                />
+                {!canEdit("info") && isEditing && <ViewOnlyBanner section="Bottle Specs" />}
+              </>
             )}
 
             {activeTab === "formulation" && (

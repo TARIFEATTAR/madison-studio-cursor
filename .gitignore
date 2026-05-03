@@ -1,5 +1,6 @@
 # Build artifacts
 /dist
+/out
 
 # Editor temp
 .cursor/
@@ -15,11 +16,18 @@
 # Playwright MCP traces (local debug output)
 .playwright-mcp/
 
+# Local research/generation artifacts
+.firecrawl/
+/remotion/
+scripts/local-generate.ts
+tsconfig.scripts.tmp.json
+
 # env files
 .env*
 
 # Supabase generated
 supabase/.next/
+supabase/.temp/
 .supabase/
 node_modules
 pnpm-lock.yaml

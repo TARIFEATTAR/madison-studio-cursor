@@ -29,6 +29,104 @@ function json(body: unknown, status = 200) {
   });
 }
 
+function cleanSecret(value: string | undefined | null) {
+  return value?.trim().replace(/^['"]|['"]$/g, "") || "";
+}
+
+function getConvexUrl() {
+  const rawUrl = cleanSecret(Deno.env.get("BESTBOTTLES_CONVEX_URL"));
+  if (!rawUrl) {
+    return {
+      error: "BESTBOTTLES_CONVEX_URL is not configured in the edge function environment.",
+    };
+  }
+
+  try {
+    const url = new URL(rawUrl);
+    if (url.protocol !== "https:" && url.protocol !== "http:") {
+      throw new Error("Invalid protocol");
+    }
+    return { url: rawUrl.replace(/\/+$/, "") };
+  } catch {
+    return {
+      error:
+        "BESTBOTTLES_CONVEX_URL must be a full Convex cloud URL, for example https://helpful-elephant-638.convex.cloud.",
+    };
+  }
+}
+
+const PRODUCT_FIELDS = [
+  "_id",
+  "_creationTime",
+  "websiteSku",
+  "graceSku",
+  "productId",
+  "category",
+  "family",
+  "color",
+  "capacity",
+  "capacityMl",
+  "capacityOz",
+  "heightWithCap",
+  "heightWithoutCap",
+  "diameter",
+  "neckThreadSize",
+  "applicator",
+  "capStyle",
+  "capColor",
+  "trimColor",
+  "bottleCollection",
+  "itemName",
+  "itemDescription",
+  "useCaseDescription",
+  "imageUrl",
+  "imageUrlCapOff",
+  "stockStatus",
+  "verified",
+  "productGroupId",
+] as const;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function trimProduct(value: unknown) {
+  if (!isRecord(value)) return value;
+  const out: Record<string, unknown> = {};
+  for (const field of PRODUCT_FIELDS) {
+    if (field in value) out[field] = value[field];
+  }
+  return out;
+}
+
+function trimProductArray(value: unknown) {
+  return Array.isArray(value) ? value.map(trimProduct) : value;
+}
+
+function trimConvexValue(path: string, value: unknown): unknown {
+  if (
+    path === "products:getByFamily" ||
+    path === "products:searchProducts" ||
+    path === "products:getCatalogProducts" ||
+    path === "products:listAll"
+  ) {
+    return trimProductArray(value);
+  }
+
+  if (path === "products:getBySku" || path === "products:getByWebsiteSku") {
+    return trimProduct(value);
+  }
+
+  if (path === "products:getProductGroup" && isRecord(value)) {
+    return {
+      ...value,
+      variants: trimProductArray(value.variants),
+    };
+  }
+
+  return value;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -38,12 +136,9 @@ Deno.serve(async (req) => {
     return json({ error: "Method not allowed" }, 405);
   }
 
-  const convexUrl = Deno.env.get("BESTBOTTLES_CONVEX_URL");
-  if (!convexUrl) {
-    return json(
-      { error: "BESTBOTTLES_CONVEX_URL is not configured in the edge function environment." },
-      500,
-    );
+  const convexConfig = getConvexUrl();
+  if ("error" in convexConfig) {
+    return json({ error: convexConfig.error }, 500);
   }
 
   const authHeader = req.headers.get("Authorization");
@@ -90,7 +185,7 @@ Deno.serve(async (req) => {
       ? (parsed.args as Record<string, unknown>)
       : {};
 
-  const target = `${convexUrl.replace(/\/$/, "")}/api/query`;
+  const target = `${convexConfig.url}/api/query`;
   let convexResponse: Response;
   try {
     convexResponse = await fetch(target, {
@@ -100,7 +195,9 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     return json(
-      { error: `Upstream fetch failed: ${e instanceof Error ? e.message : String(e)}` },
+      {
+        error: `Best Bottles Convex request failed: ${e instanceof Error ? e.message : String(e)}`,
+      },
       502,
     );
   }
@@ -109,7 +206,7 @@ Deno.serve(async (req) => {
   try {
     convexBody = await convexResponse.json();
   } catch {
-    return json({ error: "Upstream returned non-JSON response" }, 502);
+    return json({ error: "Best Bottles Convex returned a non-JSON response." }, 502);
   }
 
   if (!convexResponse.ok) {
@@ -127,5 +224,5 @@ Deno.serve(async (req) => {
     return json({ error: body.errorMessage || "Convex returned error" }, 400);
   }
 
-  return json({ value: body?.value ?? null }, 200);
+  return json({ value: trimConvexValue(path, body?.value ?? null) }, 200);
 });

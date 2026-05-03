@@ -23,7 +23,16 @@ import {
     Lock,
     Eye,
     ChevronRight,
+    Ruler,
 } from "lucide-react";
+
+/**
+ * Industry preset that swaps the section list. 'cosmetic' is the default
+ * (Scent Profile, Ingredients, Compliance/SDS — for fragrance/skincare brands);
+ * 'packaging' replaces those with bottle-specific sections (Bottle Specs) for
+ * glass packaging tenants like Best Bottles.
+ */
+export type ProductHubIndustry = "cosmetic" | "packaging";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -44,6 +53,12 @@ interface ProductInternalSidebarProps {
     onSectionChange: (sectionId: string) => void;
     /** Map of section ID to access level: 'full' | 'view' | 'none' */
     accessLevels?: Record<string, 'full' | 'view' | 'none'>;
+    /**
+     * Which section preset to render. 'cosmetic' (default) shows Scent Profile,
+     * Ingredients, Compliance/SDS. 'packaging' shows Bottle Specs in their place
+     * for glass/packaging tenants like Best Bottles.
+     */
+    industry?: ProductHubIndustry;
     className?: string;
 }
 
@@ -51,71 +66,37 @@ interface ProductInternalSidebarProps {
 // NAVIGATION CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const NAV_ITEMS: NavItem[] = [
-    {
-        id: "core",
-        label: "Core Details",
-        icon: FileText,
-        section: "info",
-        description: "Basic product information"
-    },
-    {
-        id: "tasks",
-        label: "Tasks",
-        icon: ListTodo,
-        section: "info",
-        description: "Product-related tasks"
-    },
-    {
-        id: "media",
-        label: "Media",
-        icon: ImageIcon,
-        section: "media",
-        description: "Images and gallery"
-    },
-    {
-        id: "variants",
-        label: "Variants & Pricing",
-        icon: Layers,
-        section: "info",
-        description: "SKUs, sizes, and pricing"
-    },
-    {
-        id: "formulation",
-        label: "Scent Profile",
-        icon: Beaker,
-        section: "formulation",
-        description: "Notes, longevity, sillage"
-    },
-    {
-        id: "ingredients",
-        label: "Ingredients",
-        icon: Beaker,
-        section: "ingredients",
-        description: "INCI list and materials"
-    },
-    {
-        id: "sds",
-        label: "Compliance / SDS",
-        icon: FileText,
-        section: "compliance",
-        description: "Safety data sheets"
-    },
-    {
-        id: "packaging",
-        label: "Packaging",
-        icon: Package,
-        section: "packaging",
-        description: "Packaging specifications"
-    },
-    {
-        id: "content",
-        label: "Content",
-        icon: Sparkles,
-        section: "marketing",
-        description: "Generated content"
-    },
+/** Default cosmetic-industry section list (fragrance, skincare, body care) */
+const NAV_ITEMS_COSMETIC: NavItem[] = [
+    { id: "core", label: "Core Details", icon: FileText, section: "info", description: "Basic product information" },
+    { id: "tasks", label: "Tasks", icon: ListTodo, section: "info", description: "Product-related tasks" },
+    { id: "media", label: "Media", icon: ImageIcon, section: "media", description: "Images and gallery" },
+    { id: "variants", label: "Variants & Pricing", icon: Layers, section: "info", description: "SKUs, sizes, and pricing" },
+    { id: "formulation", label: "Scent Profile", icon: Beaker, section: "formulation", description: "Notes, longevity, sillage" },
+    { id: "ingredients", label: "Ingredients", icon: Beaker, section: "ingredients", description: "INCI list and materials" },
+    { id: "sds", label: "Compliance / SDS", icon: FileText, section: "compliance", description: "Safety data sheets" },
+    { id: "packaging", label: "Packaging", icon: Package, section: "packaging", description: "Packaging specifications" },
+    { id: "content", label: "Content", icon: Sparkles, section: "marketing", description: "Generated content" },
 ];
+
+/**
+ * Packaging-industry section list. Replaces fragrance-specific sections
+ * (Scent Profile, Ingredients, Compliance/SDS) with Bottle Specs — a
+ * comprehensive vessel-spec section that doubles as a checklist for AI
+ * image-generation reference data. Logistics-style "Packaging" is folded
+ * into Bottle Specs since case/pallet info lives there.
+ */
+const NAV_ITEMS_PACKAGING: NavItem[] = [
+    { id: "core", label: "Core Details", icon: FileText, section: "info", description: "Basic product information" },
+    { id: "tasks", label: "Tasks", icon: ListTodo, section: "info", description: "Product-related tasks" },
+    { id: "media", label: "Media", icon: ImageIcon, section: "media", description: "Images and gallery" },
+    { id: "variants", label: "Variants & Pricing", icon: Layers, section: "info", description: "SKUs, sizes, applicators, caps" },
+    { id: "bottle-specs", label: "Bottle Specs", icon: Ruler, section: "info", description: "Vessel dimensions, schematic, certifications" },
+    { id: "content", label: "Content", icon: Sparkles, section: "marketing", description: "Generated content" },
+];
+
+/** Backwards-compatible alias — old code still imports `NAV_ITEMS`. */
+const NAV_ITEMS = NAV_ITEMS_COSMETIC;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // NAV ITEM COMPONENT
@@ -189,6 +170,7 @@ export function ProductInternalSidebar({
     activeSection,
     onSectionChange,
     accessLevels = {},
+    industry = "cosmetic",
     className,
 }: ProductInternalSidebarProps) {
     // Get access level for an item, default to 'full' if not specified
@@ -196,8 +178,11 @@ export function ProductInternalSidebar({
         return accessLevels[item.section] || 'full';
     };
 
+    // Pick the right preset based on industry
+    const navItems = industry === "packaging" ? NAV_ITEMS_PACKAGING : NAV_ITEMS_COSMETIC;
+
     // Filter visible items based on access
-    const visibleItems = NAV_ITEMS.filter(item => getAccessLevel(item) !== 'none');
+    const visibleItems = navItems.filter(item => getAccessLevel(item) !== 'none');
 
     return (
         <nav

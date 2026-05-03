@@ -37,6 +37,7 @@ import {
   BACKGROUND_PRESETS,
   getRandomBackgroundVariation,
 } from "@/components/darkroom/RightPanel";
+import { isSquareCrossSection } from "@/lib/product-image/skuInjector";
 
 const SCENE_FLEXIBLE_PRESET_ID = "master-scene-flexible-2000x2200";
 const ANGLE_PRESET_ID = "master-angle-2080x2288";
@@ -66,6 +67,16 @@ const ANGLE_VARIANTS: Array<{
   label: string;
   icon: string;
   promptLanguage: string;
+  /**
+   * Optional override used when the selected SKU's family is a SQUARE PRISM
+   * (Empire, Square — see `isSquareCrossSection`). The default `promptLanguage`
+   * for side / 3/4 angles tells the model the rotation "reveals depth" — true
+   * for cylinders and rectangular flasks, but for a square cross-section the
+   * side face has the SAME width as the front face, so that phrasing makes the
+   * model render a flat slab. When the family is square, this string is used
+   * in place of `promptLanguage` so the angle directive reinforces width = depth.
+   */
+  squareCrossSectionLanguage?: string;
   referenceModifier?: string;
 }> = [
   {
@@ -82,6 +93,8 @@ const ANGLE_VARIANTS: Array<{
     referenceModifier: "3qtr-left",
     promptLanguage:
       "the camera is rotated approximately 30° to the bottle's right (so the bottle appears rotated to the LEFT in the frame), eye-level, 85mm product lens at f/8; both the front face and the left side of the bottle are visible, revealing depth and three-dimensionality without sacrificing the front silhouette",
+    squareCrossSectionLanguage:
+      "the camera is rotated approximately 30° to the bottle's right (so the bottle appears rotated to the LEFT in the frame), eye-level, 85mm product lens at f/8; both the front face and the left side face of this SQUARE PRISM bottle are visible — those two faces are EQUAL in width (cross-section is square: width = depth), so neither face is narrower than the other; the body silhouette remains rectangular with the SAME height-to-width ratio as the front view; the 3/4 rotation reveals the vertical edge between the two faces and the way the key light wraps around it — it does NOT narrow the bottle's depth, do NOT render a flask or a slab",
   },
   {
     id: "3qtr-right",
@@ -90,6 +103,8 @@ const ANGLE_VARIANTS: Array<{
     referenceModifier: "3qtr-right",
     promptLanguage:
       "the camera is rotated approximately 30° to the bottle's left (so the bottle appears rotated to the RIGHT in the frame), eye-level, 85mm product lens at f/8; both the front face and the right side of the bottle are visible, revealing depth and three-dimensionality without sacrificing the front silhouette",
+    squareCrossSectionLanguage:
+      "the camera is rotated approximately 30° to the bottle's left (so the bottle appears rotated to the RIGHT in the frame), eye-level, 85mm product lens at f/8; both the front face and the right side face of this SQUARE PRISM bottle are visible — those two faces are EQUAL in width (cross-section is square: width = depth), so neither face is narrower than the other; the body silhouette remains rectangular with the SAME height-to-width ratio as the front view; the 3/4 rotation reveals the vertical edge between the two faces and the way the key light wraps around it — it does NOT narrow the bottle's depth, do NOT render a flask or a slab",
   },
   {
     id: "side-left",
@@ -98,6 +113,8 @@ const ANGLE_VARIANTS: Array<{
     referenceModifier: "side-left",
     promptLanguage:
       "pure side-profile view — the camera is rotated 90° so the bottle's left side fully faces the camera; eye-level, 85mm at f/8; the front face is no longer visible; this view reveals the bottle's depth dimension and side-profile silhouette",
+    squareCrossSectionLanguage:
+      "pure side-profile view — the camera is rotated 90° so the bottle's left side fully faces the camera; eye-level, 85mm at f/8; for this SQUARE PRISM bottle the left side face has the SAME width as the front face (cross-section is square: width = depth), so the silhouette is IDENTICAL to the front view in shape and proportion; only the cap seam orientation, the surface reflections, and any faint mould-seam line at the side edge change; do NOT render the bottle as narrower, thinner, or flask-like in this view — the body width and height-to-width ratio match the front view exactly",
   },
   {
     id: "side-right",
@@ -106,6 +123,8 @@ const ANGLE_VARIANTS: Array<{
     referenceModifier: "side-right",
     promptLanguage:
       "pure side-profile view — the camera is rotated 90° so the bottle's right side fully faces the camera; eye-level, 85mm at f/8; the front face is no longer visible; this view reveals the bottle's depth dimension and side-profile silhouette",
+    squareCrossSectionLanguage:
+      "pure side-profile view — the camera is rotated 90° so the bottle's right side fully faces the camera; eye-level, 85mm at f/8; for this SQUARE PRISM bottle the right side face has the SAME width as the front face (cross-section is square: width = depth), so the silhouette is IDENTICAL to the front view in shape and proportion; only the cap seam orientation, the surface reflections, and any faint mould-seam line at the side edge change; do NOT render the bottle as narrower, thinner, or flask-like in this view — the body width and height-to-width ratio match the front view exactly",
   },
   {
     id: "back",
@@ -188,6 +207,11 @@ const MARKETING_LAYOUT_OPTIONS: Array<{
 // that preset.
 const MASTERS_PRESETS = IMAGE_PRESET_LIST.filter((p) => p.kind === "final_render");
 import {
+  fetchProductHubBySku,
+  fetchProductHubsBySkus,
+  getUseProductHubPrompts,
+} from "@/lib/product-image/productHubLookup";
+import {
   assemblePrompt,
   type AssembledPrompt,
   type LiquidSpec,
@@ -208,6 +232,8 @@ interface FolderReferenceEntry {
   /** Map key = Grace SKU (uppercase), or `${graceSku}--${modifier}` for variants. */
   matchKey: string;
 }
+
+type ParsedReferenceFilename = { graceSku: string; modifier?: string };
 
 /**
  * Presets that swap the canonical bottle composition (e.g. exploded cap-beside
@@ -230,9 +256,7 @@ const PRESET_MODIFIER: Record<string, string> = {
  * defensively. Modifier separator is `--` (double dash) so it never collides
  * with the single dashes inside the Grace SKU itself.
  */
-function parseGraceSkuFilename(
-  filename: string,
-): { graceSku: string; modifier?: string } | null {
+function parseGraceSkuFilename(filename: string): ParsedReferenceFilename | null {
   const stem = filename
     .replace(/\.[a-z0-9]+$/i, "")   // drop extension
     .replace(/^\d+\.\s*/, "")        // drop "48. " ordering prefix from PSD exports
@@ -243,6 +267,107 @@ function parseGraceSkuFilename(
   if (!graceSku) return null;
   const modifier = rest.length > 0 ? rest.join("--").trim().toLowerCase() : undefined;
   return { graceSku, modifier };
+}
+
+function normalizeReferenceStem(filename: string): string {
+  return filename
+    .replace(/\.[a-z0-9]+$/i, "")
+    .replace(/^\d+\.\s*/, "")
+    .replace(/1vory/gi, "ivory")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function inferCapacityMlFromStem(stem: string): number | null {
+  const match = stem.match(/(?:^|-)(\d{1,3})ml(?:-|$)/);
+  return match ? Number(match[1]) : null;
+}
+
+function inferBulbTasselSuffix(filename: string): { suffix: string; capacityMl: number | null } | null {
+  const stem = normalizeReferenceStem(filename);
+  const tokens = new Set(stem.split("-").filter(Boolean));
+  if (!tokens.has("tassel")) return null;
+  if (!tokens.has("bulb") && !tokens.has("antique")) return null;
+
+  const has = (token: string) => tokens.has(token);
+  const capacityMl = inferCapacityMlFromStem(stem);
+
+  if (has("ivory") && has("silver")) return { suffix: "IVSL", capacityMl };
+  if (has("ivory") && has("gold")) return { suffix: "IVGD", capacityMl };
+  if (has("matte") && has("silver")) return { suffix: "MSLV", capacityMl };
+  if (has("black") || has("blk")) return { suffix: "BLK", capacityMl };
+  if (has("red")) return { suffix: "RED", capacityMl };
+  if (has("white") || has("wht")) return { suffix: "WHT", capacityMl };
+  if (has("lavender") || has("lvn")) return { suffix: "LVN", capacityMl };
+  if (has("pink") || has("pnk")) return { suffix: "PNK", capacityMl };
+  if (has("gold") || has("gld")) return { suffix: "GLD", capacityMl };
+  return null;
+}
+
+function isEmpireBulbTasselProduct(product: Product): boolean {
+  const sku = product.graceSku.toUpperCase();
+  if (sku.includes("-AST-")) return true;
+  const text = [
+    product.applicator,
+    product.capStyle,
+    product.itemName,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  return text.includes("tassel") && (text.includes("bulb") || text.includes("antique"));
+}
+
+function findBulbTasselMatch(
+  candidates: Product[],
+  suffix: string,
+  capacityMl: number | null,
+): Product | null {
+  return candidates.find((product) => {
+    const sku = product.graceSku.toUpperCase();
+    if (!sku.includes(`-AST-${suffix}`)) return false;
+    if (!isEmpireBulbTasselProduct(product)) return false;
+    if (capacityMl !== null && product.capacityMl !== null && product.capacityMl !== capacityMl) {
+      return false;
+    }
+    return true;
+  }) ?? null;
+}
+
+function uniqueProductsByGraceSku(products: Product[]): Product[] {
+  const seen = new Set<string>();
+  return products.filter((product) => {
+    const key = product.graceSku.toUpperCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function resolveReferenceFilenameMatch(
+  filename: string,
+  parsed: ParsedReferenceFilename | null,
+  preferredProducts: Product[],
+  familyProducts: Product[],
+): ParsedReferenceFilename | null {
+  const allProducts = uniqueProductsByGraceSku([...preferredProducts, ...familyProducts]);
+  if (parsed && allProducts.some((product) => product.graceSku.toUpperCase() === parsed.graceSku)) {
+    return parsed;
+  }
+
+  const tassel = inferBulbTasselSuffix(filename);
+  if (!tassel) return parsed;
+
+  const matched =
+    findBulbTasselMatch(preferredProducts, tassel.suffix, tassel.capacityMl) ??
+    findBulbTasselMatch(familyProducts, tassel.suffix, tassel.capacityMl);
+
+  if (!matched) return parsed;
+  return {
+    graceSku: matched.graceSku.toUpperCase(),
+    modifier: parsed?.modifier,
+  };
 }
 
 /** Build the Map key from a Grace SKU + optional modifier. */
@@ -333,10 +458,11 @@ export function MastersTabPanel({
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
   // Reference folder — operator drops a folder of PSD-rendered PNGs whose
-  // filenames match the Convex Grace SKU exactly (e.g.
-  // `GB-EMP-CLR-100ML-BST-BLK.png`). Each file is uploaded to Supabase Storage
-  // and stored in this map keyed by Grace SKU. When the operator selects a SKU
-  // in the left rail, the matching reference auto-loads as customReference.
+  // filenames either match the Convex Grace SKU exactly (e.g.
+  // `GB-EMP-CLR-100ML-BST-BLK.png`) or use a supported Empire reference name
+  // (e.g. `empire-50ml-bulb-tassel-black.png`). Each file is uploaded to
+  // Supabase Storage and stored in this map keyed by Grace SKU. When the
+  // operator selects a SKU in the left rail, the matching reference auto-loads.
   // Single-image upload (below) still wins as a one-off override.
   const [referenceFolder, setReferenceFolder] = useState<
     Map<string, FolderReferenceEntry>
@@ -400,12 +526,12 @@ export function MastersTabPanel({
   }, [selectedProduct, presetId, referenceFolder, folderUserOverride, selectedAngleId]);
 
   /**
-   * Upload a folder of PSD-rendered PNGs. Each filename is treated as the
-   * Grace SKU of the bottle it depicts (`GB-EMP-CLR-100ML-BST-BLK.png`),
-   * with an optional `--<modifier>` suffix for preset variants like
-   * `--exploded`. Files are uploaded to Supabase Storage in parallel; per-file
-   * failures are collected and surfaced loudly in the UI so we don't silently
-   * lose 15 of 16 uploads to an RLS policy or upstream race.
+   * Upload a folder of PSD-rendered PNGs. Each filename is resolved to the
+   * Grace SKU of the bottle it depicts, either by exact SKU filename
+   * (`GB-EMP-CLR-100ML-BST-BLK.png`) or by supported Empire reference naming
+   * (`empire-50ml-bulb-tassel-black.png`). Files are uploaded to Supabase
+   * Storage in parallel; per-file failures are collected and surfaced loudly
+   * so we don't silently lose 15 of 16 uploads to an RLS policy or upstream race.
    */
   const handleFolderUpload = async (files: FileList | File[]) => {
     if (!user || !currentOrganizationId) {
@@ -438,13 +564,21 @@ export function MastersTabPanel({
     const newMap = new Map(referenceFolder);
     const failures: Array<{ name: string; error: string }> = [];
     let stored = 0;
+    const preferredProducts = familyVariants ?? [];
+    const familyProducts = allFamilyProducts ?? preferredProducts;
 
     await Promise.all(
       arr.map(async (file) => {
         try {
           const parsed = parseGraceSkuFilename(file.name);
-          if (!parsed) {
-            throw new Error("Filename did not yield a Grace SKU");
+          const match = resolveReferenceFilenameMatch(
+            file.name,
+            parsed,
+            preferredProducts,
+            familyProducts,
+          );
+          if (!match) {
+            throw new Error("Filename did not yield a reference match");
           }
 
           const ts = Date.now();
@@ -471,7 +605,7 @@ export function MastersTabPanel({
             .getPublicUrl(path);
           if (!urlData?.publicUrl) throw new Error("No public URL returned");
 
-          const key = folderKey(parsed.graceSku, parsed.modifier);
+          const key = folderKey(match.graceSku, match.modifier);
           newMap.set(key, {
             url: urlData.publicUrl,
             name: file.name,
@@ -614,11 +748,12 @@ export function MastersTabPanel({
         title: "Reference uploaded",
         description: "Will anchor gpt-image-2 generation for this SKU.",
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("[MastersTabPanel] reference upload failed", e);
+      const message = e instanceof Error ? e.message : String(e);
       toast({
         title: "Upload failed",
-        description: String(e?.message || e),
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -643,14 +778,30 @@ export function MastersTabPanel({
     [presetId],
   );
 
-  const handleAssemble = (): AssembledPrompt | null => {
+  const handleAssemble = async (): Promise<AssembledPrompt | null> => {
     if (!selectedProduct) return null;
     const liquid: LiquidSpec | null = liquidEnabled
       ? { present: true, color: liquidColor, fillPercent: liquidFill }
       : null;
+
+    // Product Hub canonical-source path (opt-in via the flag in the
+    // Dark Room sidebar). When enabled, fetch the hub matching this SKU
+    // and pass it to the assembler — the assembler will switch the SKU
+    // DATA layer to the richer schematic-aware block. When the lookup
+    // returns null (sparsely-populated org, no match), the assembler
+    // silently falls back to the legacy Convex skuInjector path.
+    const productHub = getUseProductHubPrompts() && selectedProduct.graceSku
+      ? await fetchProductHubBySku(selectedProduct.graceSku, {
+          family: selectedProduct.family,
+          capacityMl: selectedProduct.capacityMl,
+          color: selectedProduct.color,
+        })
+      : null;
+
     const assembled = assemblePrompt({
       presetId,
       sku: selectedProduct,
+      productHub,
       liquid,
     });
     setAssembledCache(assembled);
@@ -669,13 +820,21 @@ export function MastersTabPanel({
 
     // Camera-angle injection — only for the Master · Angle preset. Front
     // angle is omitted from the prompt because it's the assembler's default;
-    // any other chip injects a CAMERA ANGLE OVERRIDE block.
+    // any other chip injects a CAMERA ANGLE OVERRIDE block. When the SKU's
+    // family is a SQUARE PRISM (Empire, Square), prefer the angle's
+    // `squareCrossSectionLanguage` override so the directive reinforces
+    // width = depth instead of telling the model the rotation "reveals depth"
+    // (which makes it render a flask or a slab).
+    const angleLanguage =
+      isSquareCrossSection(sku.family) && selectedAngleVariant.squareCrossSectionLanguage
+        ? selectedAngleVariant.squareCrossSectionLanguage
+        : selectedAngleVariant.promptLanguage;
     const cameraAngle: CameraAngleSpec | null =
       isAngles && selectedAngleVariant.id !== "front"
         ? {
             id: selectedAngleVariant.id,
             label: selectedAngleVariant.label,
-            promptLanguage: selectedAngleVariant.promptLanguage,
+            promptLanguage: angleLanguage,
             referenceModifier: selectedAngleVariant.referenceModifier,
           }
         : null;
@@ -760,6 +919,7 @@ export function MastersTabPanel({
         "studio-master",
         familyName ? `family:${familyName.toLowerCase().replace(/\s+/g, "-")}` : null,
         `sku:${sku.graceSku}`,
+        sku.websiteSku ? `websiteSku:${sku.websiteSku}` : null,
         ...sceneTags,
       ].filter((t): t is string => Boolean(t)),
     });
@@ -1261,8 +1421,9 @@ export function MastersTabPanel({
             </span>
           </div>
           <p className="text-[10px]" style={{ color: "var(--darkroom-text-dim)" }}>
-            Filenames must equal the Convex Grace SKU exactly — e.g.{" "}
-            <code>GB-EMP-CLR-100ML-BST-BLK.png</code>. Preset variants use a{" "}
+            Filenames can equal the Convex Grace SKU — e.g.{" "}
+            <code>GB-EMP-CLR-100ML-BST-BLK.png</code> — or a supported Empire reference name like{" "}
+            <code>empire-50ml-bulb-tassel-red.png</code>. Preset variants use a{" "}
             <code>--modifier</code> suffix:{" "}
             <code>GB-EMP-CLR-100ML-BST-BLK--exploded.png</code>.
             Leading <code>"48. "</code> ordering prefixes from PSD exports are stripped automatically.
@@ -1330,7 +1491,7 @@ export function MastersTabPanel({
             <div className="text-[10px] opacity-75" style={{ color: "#FBBF24" }}>
               These filenames don't equal any <span className="font-mono">graceSku</span> for {familyName ?? "this family"}.
               Likely cause: still in websiteSku style (e.g. <span className="font-mono">GBEmp50DrpSl</span> instead of{" "}
-              <span className="font-mono">GB-EMP-CLR-50ML-DRP-SL</span>) or the rename pass missed them.
+              <span className="font-mono">GB-EMP-CLR-50ML-DRP-SL</span>), the rename pass missed them, or the filename is not a supported Empire pattern.
             </div>
             <div className="space-y-0.5 max-h-40 overflow-auto pt-1">
               {orphanReferences.map((o) => (

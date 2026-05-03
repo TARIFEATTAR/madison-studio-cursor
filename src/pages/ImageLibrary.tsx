@@ -21,13 +21,16 @@ import {
   Tags,
   Loader2,
   Upload,
+  ChevronsUpDown,
 } from "lucide-react";
 import { MagicWand02 } from "@untitledui/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -45,6 +48,10 @@ import { cn } from "@/lib/utils";
 import { ImageEditorModal, type ImageEditorImage } from "@/components/image-editor/ImageEditorModal";
 import { ProductSelector } from "@/components/forge/ProductSelector";
 import { useProducts, type Product } from "@/hooks/useProducts";
+import {
+  getProductsByFamily,
+  type Product as BestBottlesProduct,
+} from "@/integrations/convex/bestBottles";
 import {
   addLibraryTag,
   removeLibraryTag,
@@ -86,6 +93,99 @@ type AssetTypeFilter =
   | "roll-ons"
   | "empty-plates";
 type SortOption = "recent" | "oldest" | "category";
+type PublishDestination = "tarife-sanity" | "best-bottles-grid" | "best-bottles-pdp";
+type BestBottlesPdpMode = "cap-on" | "cap-off";
+type BulkBestBottlesRow = {
+  imageId: string;
+  imageUrl: string;
+  label: string;
+  websiteSku: string;
+};
+
+const PRIMARY_PDP_MODE: BestBottlesPdpMode = "cap-on";
+
+function splitWebsiteSkus(value: string): string[] {
+  return Array.from(
+    new Set(
+      value
+        .split(/[,\n]+/)
+        .map((sku) => sku.trim())
+        .filter(Boolean),
+    ),
+  );
+}
+
+function isEmpireVintageBulbSprayerProduct(product: BestBottlesProduct | undefined): boolean {
+  if (!product) return false;
+  const isEmpire =
+    product.family === "Empire" ||
+    /^(?:GB|LB)Emp/i.test(product.websiteSku) ||
+    /Empire/i.test(product.itemName);
+  const applicatorText = `${product.applicator ?? ""} ${product.itemName}`.toLowerCase();
+  return isEmpire && /(vintage|antique).*(bulb|spray)/.test(applicatorText);
+}
+
+function isEmpireVintageBulbSprayerSku(
+  websiteSku: string,
+  productsByWebsiteSku: Map<string, BestBottlesProduct>,
+): boolean {
+  const normalizedSku = websiteSku.trim();
+  if (!normalizedSku) return false;
+  const product = productsByWebsiteSku.get(normalizedSku.toUpperCase());
+  if (product) return isEmpireVintageBulbSprayerProduct(product);
+  return /^(?:GB|LB)Emp\d+AnSp/i.test(normalizedSku);
+}
+
+function detectWebsiteSku(image: GeneratedImage): string {
+  const tags = image.library_tags ?? [];
+  for (const tag of tags) {
+    const raw = tag.replace(/^(websiteSku|website-sku|sku):/i, "").trim();
+    const match = raw.match(/\b(?:GB|LB)Emp[A-Za-z0-9]+\b/);
+    if (match) return match[0];
+  }
+
+  const searchable = [image.session_name, image.final_prompt, image.library_category, ...tags]
+    .filter(Boolean)
+    .join(" ");
+  return searchable.match(/\b(?:GB|LB)Emp[A-Za-z0-9]+\b/)?.[0] ?? "";
+}
+
+function detectGraceSku(image: GeneratedImage): string {
+  const tags = image.library_tags ?? [];
+  for (const tag of tags) {
+    const raw = tag.replace(/^sku:/i, "").trim();
+    const match = raw.match(/\b(?:GB|LB)-EMP-[A-Z0-9-]+\b/i);
+    if (match) return match[0].toUpperCase();
+  }
+
+  const searchable = [image.session_name, image.final_prompt, image.library_category, ...tags]
+    .filter(Boolean)
+    .join(" ");
+  return searchable.match(/\b(?:GB|LB)-EMP-[A-Z0-9-]+\b/i)?.[0].toUpperCase() ?? "";
+}
+
+async function extractFunctionErrorMessage(error: unknown, fallback: string): Promise<string> {
+  if (!error) return fallback;
+  try {
+    const context = (error as { context?: { json?: () => Promise<unknown>; text?: () => Promise<string> } })
+      .context;
+    if (context && typeof context.json === "function") {
+      const body = await context.json();
+      if (body && typeof body === "object" && "error" in body) {
+        const message = (body as { error?: unknown }).error;
+        if (typeof message === "string" && message.trim()) return message;
+      }
+    }
+    if (context && typeof context.text === "function") {
+      const text = await context.text();
+      if (text.trim()) return text;
+    }
+  } catch {
+    // Fall back to the top-level error below.
+  }
+
+  return error instanceof Error ? error.message : fallback;
+}
 
 /** Pilot filter: Consistency / pipeline images tagged with roller-ball applicators. */
 function matchesRollOnLibraryScope(image: GeneratedImage): boolean {
@@ -157,14 +257,24 @@ export default function ImageLibrary() {
   const [newLibraryTag, setNewLibraryTag] = useState("");
   const [tagActionLoading, setTagActionLoading] = useState(false);
 
-  // Publish live: Best Bottles grid (Convex) or Tarife mainImage (Sanity via push-product-to-sanity)
+  // Publish live: Best Bottles grid/PDP or Tarife mainImage (Sanity via push-product-to-sanity)
   const [sanityPublishOpen, setSanityPublishOpen] = useState(false);
   const [sanityPublishImage, setSanityPublishImage] = useState<GeneratedImage | null>(null);
   const [sanityPublishProduct, setSanityPublishProduct] = useState<Product | null>(null);
   const [sanityPublishLoading, setSanityPublishLoading] = useState(false);
-  /** Best Bottles: Convex productGroups.heroImageUrl (live site catalog grid). */
-  const [bestBottlesGridHero, setBestBottlesGridHero] = useState(false);
+  const [publishDestination, setPublishDestination] =
+    useState<PublishDestination>("tarife-sanity");
   const [bestBottlesSlug, setBestBottlesSlug] = useState("");
+  const [bestBottlesWebsiteSku, setBestBottlesWebsiteSku] = useState("");
+  const [bestBottlesPdpMode, setBestBottlesPdpMode] =
+    useState<BestBottlesPdpMode>("cap-on");
+  const [bestBottlesSkuPickerOpen, setBestBottlesSkuPickerOpen] = useState(false);
+  const [bestBottlesSkuSearch, setBestBottlesSkuSearch] = useState("");
+  const [bulkBestBottlesOpen, setBulkBestBottlesOpen] = useState(false);
+  const [bulkBestBottlesRows, setBulkBestBottlesRows] = useState<BulkBestBottlesRow[]>([]);
+  const [bulkBestBottlesMode, setBulkBestBottlesMode] =
+    useState<BestBottlesPdpMode>("cap-on");
+  const [bulkBestBottlesLoading, setBulkBestBottlesLoading] = useState(false);
 
   // Image editor modal
   const [imageEditorOpen, setImageEditorOpen] = useState(false);
@@ -219,6 +329,96 @@ export default function ImageLibrary() {
     },
     enabled: !!user,
   });
+
+  const { data: bestBottlesProducts = [], isLoading: bestBottlesProductsLoading } = useQuery({
+    queryKey: ["best-bottles-products", "Empire"],
+    queryFn: () => getProductsByFamily("Empire"),
+    enabled:
+      isBestBottlesOrg &&
+      ((sanityPublishOpen && publishDestination === "best-bottles-pdp") || bulkBestBottlesOpen),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const filteredBestBottlesProducts = useMemo(() => {
+    const query = bestBottlesSkuSearch.trim().toLowerCase();
+    const products = [...bestBottlesProducts].sort((a, b) =>
+      (a.websiteSku || a.graceSku).localeCompare(b.websiteSku || b.graceSku),
+    );
+    if (!query) return products;
+
+    return products.filter((product) =>
+      [
+        product.websiteSku,
+        product.graceSku,
+        product.itemName,
+        product.family,
+        product.capacity,
+        product.applicator,
+        product.capColor,
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query)),
+    );
+  }, [bestBottlesProducts, bestBottlesSkuSearch]);
+
+  const bestBottlesProductsByWebsiteSku = useMemo(() => {
+    const map = new Map<string, BestBottlesProduct>();
+    for (const product of bestBottlesProducts) {
+      if (product.websiteSku) {
+        map.set(product.websiteSku.toUpperCase(), product);
+      }
+    }
+    return map;
+  }, [bestBottlesProducts]);
+
+  const bestBottlesWebsiteSkuByGraceSku = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const product of bestBottlesProducts) {
+      if (product.graceSku && product.websiteSku) {
+        map.set(product.graceSku.toUpperCase(), product.websiteSku);
+      }
+    }
+    return map;
+  }, [bestBottlesProducts]);
+
+  const resolveBestBottlesWebsiteSku = (image: GeneratedImage) => {
+    const websiteSku = detectWebsiteSku(image);
+    if (websiteSku) return websiteSku;
+    const graceSku = detectGraceSku(image);
+    return graceSku ? bestBottlesWebsiteSkuByGraceSku.get(graceSku) ?? "" : "";
+  };
+
+  const getBestBottlesPdpModeForWebsiteSku = (
+    websiteSku: string,
+    requestedMode: BestBottlesPdpMode,
+  ): BestBottlesPdpMode =>
+    isEmpireVintageBulbSprayerSku(websiteSku, bestBottlesProductsByWebsiteSku)
+      ? PRIMARY_PDP_MODE
+      : requestedMode;
+
+  const selectedBestBottlesWebsiteSkus = useMemo(
+    () => splitWebsiteSkus(bestBottlesWebsiteSku),
+    [bestBottlesWebsiteSku],
+  );
+  const selectedBestBottlesPrimaryOnly =
+    selectedBestBottlesWebsiteSkus.length > 0 &&
+    selectedBestBottlesWebsiteSkus.every((sku) =>
+      isEmpireVintageBulbSprayerSku(sku, bestBottlesProductsByWebsiteSku),
+    );
+  const selectedBestBottlesHasPrimaryOnly =
+    selectedBestBottlesWebsiteSkus.some((sku) =>
+      isEmpireVintageBulbSprayerSku(sku, bestBottlesProductsByWebsiteSku),
+    );
+  const bulkBestBottlesRowsWithSku = bulkBestBottlesRows.filter((row) => row.websiteSku.trim());
+  const bulkBestBottlesPrimaryOnly =
+    bulkBestBottlesRowsWithSku.length > 0 &&
+    bulkBestBottlesRowsWithSku.every((row) =>
+      isEmpireVintageBulbSprayerSku(row.websiteSku, bestBottlesProductsByWebsiteSku),
+    );
+  const bulkBestBottlesHasPrimaryOnly =
+    bulkBestBottlesRowsWithSku.some((row) =>
+      isEmpireVintageBulbSprayerSku(row.websiteSku, bestBottlesProductsByWebsiteSku),
+    );
 
   // Filter and sort images
   const filteredImages = useMemo(() => {
@@ -330,6 +530,65 @@ export default function ImageLibrary() {
     }
   };
 
+  const openBulkBestBottlesPublish = () => {
+    const selected = images.filter((image) => selectedImages.has(image.id));
+    setBulkBestBottlesRows(
+      selected.map((image) => ({
+        imageId: image.id,
+        imageUrl: image.image_url,
+        label: image.session_name || image.final_prompt || "Library image",
+        websiteSku: resolveBestBottlesWebsiteSku(image),
+      })),
+    );
+    setBulkBestBottlesMode("cap-on");
+    setBulkBestBottlesOpen(true);
+  };
+
+  const updateBulkBestBottlesSku = (imageId: string, websiteSku: string) => {
+    setBulkBestBottlesRows((rows) =>
+      rows.map((row) => (row.imageId === imageId ? { ...row, websiteSku } : row)),
+    );
+  };
+
+  const handleBulkBestBottlesPublish = async () => {
+    const rowsToPublish = bulkBestBottlesRows
+      .map((row) => ({ ...row, websiteSku: row.websiteSku.trim() }))
+      .filter((row) => row.websiteSku);
+    if (rowsToPublish.length === 0) return;
+
+    setBulkBestBottlesLoading(true);
+    try {
+      for (const row of rowsToPublish) {
+        const mode = getBestBottlesPdpModeForWebsiteSku(row.websiteSku, bulkBestBottlesMode);
+        const { data, error } = await supabase.functions.invoke("push-bestbottles-pdp-image", {
+          body: {
+            imageUrl: row.imageUrl,
+            websiteSku: row.websiteSku,
+            mode,
+          },
+        });
+        if (error) throw new Error(await extractFunctionErrorMessage(error, "Best Bottles publish failed"));
+        if (data?.error) throw new Error(`${row.websiteSku}: ${data.error}`);
+      }
+
+      toast({
+        title: "Best Bottles batch updated",
+        description: `${rowsToPublish.length} image${rowsToPublish.length === 1 ? "" : "s"} pushed to Best Bottles.`,
+      });
+      setBulkBestBottlesOpen(false);
+      setBulkBestBottlesRows([]);
+      setSelectedImages(new Set());
+    } catch (e: unknown) {
+      const rawMessage = await extractFunctionErrorMessage(e, "Unable to publish batch");
+      const message = /failed to send|functions\/v1|edge function|net::err_failed/i.test(rawMessage)
+        ? "Madison could not reach the Best Bottles PDP publish function. Deploy push-bestbottles-pdp-image and confirm its Supabase secrets/CORS configuration, then try again."
+        : rawMessage;
+      toast({ title: "Batch publish failed", description: message, variant: "destructive" });
+    } finally {
+      setBulkBestBottlesLoading(false);
+    }
+  };
+
   const toggleImageSelection = (imageId: string) => {
     setSelectedImages((prev) => {
       const newSet = new Set(prev);
@@ -357,23 +616,29 @@ export default function ImageLibrary() {
   const openSanityPublish = (image: GeneratedImage) => {
     setSanityPublishImage(image);
     setSanityPublishProduct(null);
-    setBestBottlesGridHero(false);
+    setPublishDestination(isBestBottlesOrg ? "best-bottles-pdp" : "tarife-sanity");
     setBestBottlesSlug("");
+    setBestBottlesWebsiteSku("");
+    setBestBottlesPdpMode("cap-on");
+    setBestBottlesSkuSearch("");
     setSanityPublishOpen(true);
   };
 
   const handleConfirmSanityPublish = async () => {
     if (!sanityPublishImage) return;
-    if (bestBottlesGridHero) {
+    if (publishDestination === "best-bottles-grid") {
       const slug = bestBottlesSlug.trim();
       if (!slug) return;
+    } else if (publishDestination === "best-bottles-pdp") {
+      const websiteSkus = splitWebsiteSkus(bestBottlesWebsiteSku);
+      if (websiteSkus.length === 0) return;
     } else if (!sanityPublishProduct) {
       return;
     }
 
     setSanityPublishLoading(true);
     try {
-      if (bestBottlesGridHero) {
+      if (publishDestination === "best-bottles-grid") {
         const slug = bestBottlesSlug.trim();
         const { data, error } = await supabase.functions.invoke("push-bestbottles-grid-hero", {
           body: {
@@ -381,12 +646,35 @@ export default function ImageLibrary() {
             slug,
           },
         });
-        if (error) throw error;
+        if (error) throw new Error(await extractFunctionErrorMessage(error, "Best Bottles catalog update failed"));
         if (data?.error) throw new Error(data.error);
 
         toast({
           title: "Website catalog updated",
           description: `Live product group "${slug}" now uses this image on bestbottles.com (Convex).`,
+        });
+      } else if (publishDestination === "best-bottles-pdp") {
+        const websiteSkus = splitWebsiteSkus(bestBottlesWebsiteSku);
+
+        for (const websiteSku of websiteSkus) {
+          const mode = getBestBottlesPdpModeForWebsiteSku(websiteSku, bestBottlesPdpMode);
+          const { data, error } = await supabase.functions.invoke("push-bestbottles-pdp-image", {
+            body: {
+              imageUrl: sanityPublishImage.image_url,
+              websiteSku,
+              mode,
+            },
+          });
+          if (error) throw new Error(await extractFunctionErrorMessage(error, "Best Bottles PDP update failed"));
+          if (data?.error) throw new Error(`${websiteSku}: ${data.error}`);
+        }
+
+        toast({
+          title: "Best Bottles PDP updated",
+          description:
+            websiteSkus.length === 1
+              ? `${websiteSkus[0]} ${getBestBottlesPdpModeForWebsiteSku(websiteSkus[0], bestBottlesPdpMode)} now points to the uploaded Sanity image.`
+              : `${websiteSkus.length} SKUs now point to the uploaded Sanity image.`,
         });
       } else {
         const { data, error } = await supabase.functions.invoke("push-product-to-sanity", {
@@ -396,7 +684,7 @@ export default function ImageLibrary() {
             libraryImageUrl: sanityPublishImage.image_url,
           },
         });
-        if (error) throw error;
+        if (error) throw new Error(await extractFunctionErrorMessage(error, "Sanity publish failed"));
         if (data?.error) throw new Error(data.error);
 
         toast({
@@ -409,10 +697,18 @@ export default function ImageLibrary() {
       setSanityPublishOpen(false);
       setSanityPublishImage(null);
       setSanityPublishProduct(null);
-      setBestBottlesGridHero(false);
+      setPublishDestination("tarife-sanity");
       setBestBottlesSlug("");
+      setBestBottlesWebsiteSku("");
+      setBestBottlesPdpMode("cap-on");
+      setBestBottlesSkuSearch("");
     } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "Unable to publish";
+      const rawMessage = await extractFunctionErrorMessage(e, "Unable to publish");
+      const message =
+        publishDestination === "best-bottles-pdp" &&
+        /failed to send|functions\/v1|edge function|net::err_failed/i.test(rawMessage)
+          ? "Madison could not reach the Best Bottles PDP publish function. Deploy push-bestbottles-pdp-image and confirm its Supabase secrets/CORS configuration, then try again."
+          : rawMessage;
       toast({ title: "Publish failed", description: message, variant: "destructive" });
     } finally {
       setSanityPublishLoading(false);
@@ -588,6 +884,18 @@ export default function ImageLibrary() {
                 >
                   <X className="w-4 h-4" />
                 </Button>
+                {isBestBottlesOrg && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={openBulkBestBottlesPublish}
+                    className="border-[var(--darkroom-accent)] text-[var(--darkroom-accent)] hover:bg-[var(--darkroom-accent)]/10 h-8 text-xs"
+                  >
+                    <Upload className="w-3 h-3 md:mr-1" />
+                    <span className="hidden md:inline">Push to Best Bottles</span>
+                    <span className="md:hidden">Push</span>
+                  </Button>
+                )}
                 <Button
                   variant="destructive"
                   size="sm"
@@ -871,14 +1179,145 @@ export default function ImageLibrary() {
       </Dialog>
 
       <Dialog
+        open={bulkBestBottlesOpen}
+        onOpenChange={(open) => {
+          setBulkBestBottlesOpen(open);
+          if (!open) {
+            setBulkBestBottlesRows([]);
+            setBulkBestBottlesMode("cap-on");
+          }
+        }}
+      >
+        <DialogContent className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Push selected images to Best Bottles</DialogTitle>
+            <DialogDescription className="text-[var(--darkroom-text)]/70">
+              Confirm the Website SKU for each selected Library image. Each image will upload to
+              Best Bottles Sanity, then update the matching product image field.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <Label htmlFor="bulk-bb-mode" className="text-[var(--darkroom-text)]">
+              Product image slot for this batch
+            </Label>
+            {bulkBestBottlesPrimaryOnly ? (
+              <div
+                id="bulk-bb-mode"
+                className="rounded-md border border-[var(--darkroom-border)] bg-[var(--darkroom-bg)] px-3 py-2 text-sm text-[var(--darkroom-text)]"
+              >
+                Main product image only
+              </div>
+            ) : (
+              <Select
+                value={bulkBestBottlesMode}
+                onValueChange={(value) => setBulkBestBottlesMode(value as BestBottlesPdpMode)}
+              >
+                <SelectTrigger
+                  id="bulk-bb-mode"
+                  className="bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)]"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cap-on">Main product image / cap or top on</SelectItem>
+                  <SelectItem value="cap-off">Secondary image / cap or top off</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+            {bulkBestBottlesHasPrimaryOnly && (
+              <p className="text-[11px] text-[var(--darkroom-text)]/50">
+                Empire vintage bulb sprayer rows publish to the main PDP image only.
+              </p>
+            )}
+          </div>
+
+          <div className="max-h-[52vh] overflow-y-auto overscroll-contain pr-1 space-y-2">
+            {bulkBestBottlesRows.map((row, index) => (
+              <div
+                key={row.imageId}
+                className="grid grid-cols-[56px_1fr] md:grid-cols-[64px_1fr_260px] gap-3 rounded-md border border-[var(--darkroom-border)] bg-[var(--darkroom-bg)]/50 p-2"
+              >
+                <img
+                  src={row.imageUrl}
+                  alt=""
+                  className="h-14 w-14 md:h-16 md:w-16 rounded object-cover border border-[var(--darkroom-border)]"
+                />
+                <div className="min-w-0 self-center">
+                  <div className="text-xs text-[var(--darkroom-text)]/50">Image {index + 1}</div>
+                  <div className="truncate text-sm text-[var(--darkroom-text)]">{row.label}</div>
+                </div>
+                <div className="col-span-2 md:col-span-1 space-y-1">
+                  <Label
+                    htmlFor={`bulk-bb-sku-${row.imageId}`}
+                    className="text-[11px] text-[var(--darkroom-text)]/70"
+                  >
+                    Website SKU
+                  </Label>
+                  <Input
+                    id={`bulk-bb-sku-${row.imageId}`}
+                    value={row.websiteSku}
+                    onChange={(e) => updateBulkBestBottlesSku(row.imageId, e.target.value)}
+                    placeholder="e.g. GBEmp50AnSpTslRed"
+                    className="bg-[var(--darkroom-surface)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] font-mono text-xs"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-[11px] text-[var(--darkroom-text)]/50">
+            Rows without a Website SKU are skipped. Different top colors should each use their own
+            matching image and SKU.
+          </p>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              className="border-[var(--darkroom-border)] text-[var(--darkroom-text)]"
+              onClick={() => {
+                setBulkBestBottlesOpen(false);
+                setBulkBestBottlesRows([]);
+                setBulkBestBottlesMode("cap-on");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="bg-[var(--darkroom-accent)] hover:bg-[var(--darkroom-accent-hover)] text-[var(--darkroom-bg)]"
+              disabled={
+                bulkBestBottlesLoading ||
+                bulkBestBottlesRows.every((row) => !row.websiteSku.trim())
+              }
+              onClick={() => void handleBulkBestBottlesPublish()}
+            >
+              {bulkBestBottlesLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Publishing…
+                </>
+              ) : (
+                "Push batch"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
         open={sanityPublishOpen}
         onOpenChange={(open) => {
           setSanityPublishOpen(open);
           if (!open) {
             setSanityPublishImage(null);
             setSanityPublishProduct(null);
-            setBestBottlesGridHero(false);
+            setPublishDestination("tarife-sanity");
             setBestBottlesSlug("");
+            setBestBottlesWebsiteSku("");
+            setBestBottlesPdpMode("cap-on");
+            setBestBottlesSkuSearch("");
           }
         }}
       >
@@ -898,33 +1337,40 @@ export default function ImageLibrary() {
                 className="w-20 h-20 rounded-md object-cover border border-[var(--darkroom-border)] shrink-0"
               />
               <p className="text-xs text-[var(--darkroom-text)]/60 line-clamp-4">
-                Turn on <strong className="font-medium">Catalog grid thumbnail</strong> to update the
-                live site grid for a product-group slug. Leave it off to push a Tarife fragrance hero
-                to Sanity instead.
+                Choose whether this render updates a Best Bottles product page, a Best Bottles
+                catalog thumbnail, or a Tarife fragrance main image.
               </p>
             </div>
           )}
-          <div className="flex items-center justify-between gap-3 rounded-lg border border-[var(--darkroom-border)] px-3 py-2">
-            <div className="space-y-0.5">
-              <Label htmlFor="bb-grid-hero" className="text-[var(--darkroom-text)] cursor-pointer">
-                Catalog grid thumbnail
-              </Label>
-              <p className="text-[11px] text-[var(--darkroom-text)]/55 leading-snug">
-                Updates the live storefront: Convex{" "}
-                <span className="font-mono">productGroups.heroImageUrl</span> for the slug below
-                (same URL as this library image).
-              </p>
-            </div>
-            <Switch
-              id="bb-grid-hero"
-              checked={bestBottlesGridHero}
-              onCheckedChange={(v) => {
-                setBestBottlesGridHero(v);
-                if (v) setSanityPublishProduct(null);
+          <div className="space-y-2">
+            <Label htmlFor="publish-destination" className="text-[var(--darkroom-text)]">
+              Destination
+            </Label>
+            <Select
+              value={publishDestination}
+              onValueChange={(value) => {
+                setPublishDestination(value as PublishDestination);
+                if (value !== "tarife-sanity") setSanityPublishProduct(null);
               }}
-            />
+            >
+              <SelectTrigger
+                id="publish-destination"
+                className="bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)]"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {isBestBottlesOrg && (
+                  <>
+                    <SelectItem value="best-bottles-pdp">Best Bottles PDP image</SelectItem>
+                    <SelectItem value="best-bottles-grid">Best Bottles catalog thumbnail</SelectItem>
+                  </>
+                )}
+                <SelectItem value="tarife-sanity">Tarife product main image</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          {bestBottlesGridHero ? (
+          {publishDestination === "best-bottles-grid" ? (
             <div className="space-y-2">
               <Label htmlFor="bb-slug" className="text-[var(--darkroom-text)]">
                 Product group slug
@@ -938,6 +1384,126 @@ export default function ImageLibrary() {
               />
               <p className="text-[11px] text-[var(--darkroom-text)]/50">
                 Must match <span className="font-mono">productGroups.slug</span> in Convex exactly.
+              </p>
+            </div>
+          ) : publishDestination === "best-bottles-pdp" ? (
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label className="text-[var(--darkroom-text)]">SKU picker</Label>
+                <Popover open={bestBottlesSkuPickerOpen} onOpenChange={setBestBottlesSkuPickerOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={bestBottlesSkuPickerOpen}
+                      className="w-full justify-between bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)]"
+                    >
+                      {bestBottlesWebsiteSku || "Select an Empire SKU..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-[min(420px,calc(100vw-2rem))] p-0 bg-[#1A1816] border-[#2C2C2C] z-[9999]"
+                    align="start"
+                  >
+                    <Command className="bg-[#1A1816]">
+                      <CommandInput
+                        placeholder="Search SKU, cap color, applicator..."
+                        value={bestBottlesSkuSearch}
+                        onValueChange={setBestBottlesSkuSearch}
+                        className="bg-[#1A1816] text-[#EAEAEA]"
+                      />
+                      <CommandList className="bg-[#1A1816] max-h-[340px] overflow-y-auto overscroll-contain">
+                        <CommandEmpty className="text-studio-text-muted">
+                          {bestBottlesProductsLoading
+                            ? "Loading Best Bottles SKUs..."
+                            : "No matching Empire SKUs found. Use manual entry below."}
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {filteredBestBottlesProducts.map((product) => (
+                            <CommandItem
+                              key={product._id}
+                              value={`${product.websiteSku} ${product.graceSku} ${product.itemName} ${product.applicator ?? ""} ${product.capColor ?? ""}`}
+                              onSelect={() => {
+                                setBestBottlesWebsiteSku(product.websiteSku);
+                                setBestBottlesSkuSearch("");
+                              }}
+                              className="flex items-start gap-2 text-[#EAEAEA] hover:bg-white/10 cursor-pointer aria-selected:bg-white/10 aria-selected:text-[#EAEAEA]"
+                            >
+                              <div className="min-w-0">
+                                <div className="font-mono text-xs">{product.websiteSku}</div>
+                                <div className="truncate text-xs text-[#A8A29E]">
+                                  {product.itemName}
+                                </div>
+                              </div>
+                              <span className="ml-auto shrink-0 text-right text-[11px] text-[#888]">
+                                {[product.capacity, product.applicator, product.capColor]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              </span>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bb-website-sku" className="text-[var(--darkroom-text)]">
+                  Website SKU manual override
+                </Label>
+                <Textarea
+                  id="bb-website-sku"
+                  value={bestBottlesWebsiteSku}
+                  onChange={(e) => setBestBottlesWebsiteSku(e.target.value)}
+                  placeholder={"e.g. GBEmp50RdcrShnGl\nOptional: one SKU per line for a batch"}
+                  className="min-h-20 bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)] font-mono text-sm"
+                />
+                <p className="text-[11px] text-[var(--darkroom-text)]/50">
+                  Use one SKU for a single image. Use one SKU per line only when the exact same
+                  approved image should be assigned to multiple variants.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bb-pdp-mode" className="text-[var(--darkroom-text)]">
+                  Product image slot
+                </Label>
+                {selectedBestBottlesPrimaryOnly ? (
+                  <div
+                    id="bb-pdp-mode"
+                    className="rounded-md border border-[var(--darkroom-border)] bg-[var(--darkroom-bg)] px-3 py-2 text-sm text-[var(--darkroom-text)]"
+                  >
+                    Main product image only
+                  </div>
+                ) : (
+                  <Select
+                    value={bestBottlesPdpMode}
+                    onValueChange={(value) => setBestBottlesPdpMode(value as BestBottlesPdpMode)}
+                  >
+                    <SelectTrigger
+                      id="bb-pdp-mode"
+                      className="bg-[var(--darkroom-bg)] border-[var(--darkroom-border)] text-[var(--darkroom-text)]"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cap-on">Main product image / cap or top on</SelectItem>
+                      <SelectItem value="cap-off">Secondary image / cap or top off</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+                {selectedBestBottlesHasPrimaryOnly && (
+                  <p className="text-[11px] text-[var(--darkroom-text)]/50">
+                    Empire vintage bulb sprayer images are assigned to the main PDP image only.
+                  </p>
+                )}
+              </div>
+              <p className="text-[11px] text-[var(--darkroom-text)]/50">
+                Uploads this render to Best Bottles Sanity first, then patches the matching Convex
+                product image field. Product pages can show each top color when each SKU receives
+                its own approved render.
               </p>
             </div>
           ) : (
@@ -963,8 +1529,11 @@ export default function ImageLibrary() {
                 setSanityPublishOpen(false);
                 setSanityPublishImage(null);
                 setSanityPublishProduct(null);
-                setBestBottlesGridHero(false);
+                setPublishDestination("tarife-sanity");
                 setBestBottlesSlug("");
+                setBestBottlesWebsiteSku("");
+                setBestBottlesPdpMode("cap-on");
+                setBestBottlesSkuSearch("");
               }}
             >
               Cancel
@@ -974,7 +1543,11 @@ export default function ImageLibrary() {
               className="bg-[var(--darkroom-accent)] hover:bg-[var(--darkroom-accent-hover)] text-[var(--darkroom-bg)]"
               disabled={
                 sanityPublishLoading ||
-                (bestBottlesGridHero ? !bestBottlesSlug.trim() : !sanityPublishProduct)
+                (publishDestination === "best-bottles-grid"
+                  ? !bestBottlesSlug.trim()
+                  : publishDestination === "best-bottles-pdp"
+                    ? !bestBottlesWebsiteSku.trim()
+                    : !sanityPublishProduct)
               }
               onClick={() => void handleConfirmSanityPublish()}
             >
